@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LiveSupport - Tickets</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<script src="/server.js" defer></script>
+<div class="dashboard">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2 class="logo">LiveSupport</h2>
+    <nav class="menu">
+        <a href="dashboard.html">Inbox</a>
+        <a href="tickets.html" class="active">Tickets</a>
+        <a href="analytics.html">Analytics</a>
+        <a href="kb.html">Knowledge Base</a>
+        <a href="settings.html">Settings</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <div class="main">
+    <header class="topbar">
+      <div class="branch">
+          Branch: <strong>Ikeja Branch</strong>
+      </div>
+      <div class="top-right">
+          <span>Staff: <span id="staffName">Loading...</span></span>
+          <a href="/logout"><button class="logout-btn">Logout</button></a>
+      </div>
+    </header>
+
+    <section class="content">
+      <h1>Tickets</h1>
+      <div id="ticketList">
+        <p>No tickets yet.</p>
+      </div>
+      <button class="action-btn" id="createTicketBtn">Create Ticket</button>
+    </section>
+
+  </div>
+
+</div>
+
+<!-- TICKET MODAL -->
+<div id="ticketModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn">&times;</span>
+    <h2>Restaurant Payment Ticket</h2>
+    <textarea id="ticketText" spellcheck="false">
+Restaurant Name
+123 Main St, Lagos, Nigeria
++1 (555) 176-2972 | support@restaurant.com
+__________________________________________
+Ticket #: 10045   Date: 00/00/0000
+Table: 00   Time: 00:00
+Server: [Server Name]
+__________________________________________
+Items | Qty | Price | Total
+__________________________________________
+???????? | 0 | ₦0 | ₦0
+???????? | 0 | ₦0 | ₦0
+???????? | 0 | ₦0 | ₦0
+__________________________________________
+Subtotal: | | | ₦
+VAT (7.5%): | | | ₦
+Service Charge (5%): | | | ₦
+__________________________________________
+Total Amount: | | | ₦
+__________________________________________
+Thank you for dining with us!
+Please visit again.
+    </textarea>
+    <div class="modal-actions">
+      <button id="saveTicket" class="ai-btn primary">Save</button>
+      <button id="printTicket" class="ai-btn success">Print</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let tickets = [];
+
+const modal = document.getElementById("ticketModal");
+const openBtn = document.getElementById("createTicketBtn");
+const closeBtn = document.querySelector(".close-btn");
+const saveBtn = document.getElementById("saveTicket");
+const printBtn = document.getElementById("printTicket");
+const ticketList = document.getElementById("ticketList");
+
+// Open modal
+openBtn.onclick = () => modal.style.display = "block";
+
+// Close modal
+closeBtn.onclick = () => modal.style.display = "none";
+
+// Close modal on outside click
+window.onclick = (e) => { if(e.target==modal) modal.style.display="none"; }
+
+// Save ticket
+saveBtn.onclick = () => {
+    const content = document.getElementById("ticketText").value;
+    const ticket = { id: tickets.length+1, content, date: new Date().toLocaleString() };
+    tickets.push(ticket);
+    modal.style.display = "none";
+    renderTickets();
+};
+
+// Render ticket list
+function renderTickets() {
+    ticketList.innerHTML = "";
+    if(tickets.length===0){ ticketList.innerHTML="<p>No tickets yet.</p>"; return; }
+    tickets.forEach(t => {
+        const div = document.createElement("div");
+        div.classList.add("ticketItem");
+        div.innerHTML = `<h4>Ticket #${t.id} (${t.date})</h4><pre>${t.content}</pre>`;
+        ticketList.appendChild(div);
+    });
+}
+
+// Print ticket
+printBtn.onclick = () => {
+    const ticketContent = document.getElementById("ticketText").value;
+    const printWindow = window.open('', '', 'height=600,width=800');
+    printWindow.document.write('<pre>'+ticketContent+'</pre>');
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// Load staff name
+fetch("/api/user")
+.then(res=>res.json())
+.then(data=>document.getElementById("staffName").textContent=data.role)
+.catch(err=>console.log("User fetch error",err));
+</script>
+
+</body>
+</html>
