@@ -451,5 +451,21 @@ scrollBtn.onclick = () => {
 };
 </script>
 
+<script>
+// Highlight the active sidebar link
+const sidebarLinks = document.querySelectorAll('.sidebar .menu a');
+const currentPath = window.location.pathname;
+
+sidebarLinks.forEach(link => {
+    // Remove any existing active class
+    link.classList.remove('active');
+
+    // Compare href with current path
+    if (link.getAttribute('href') === currentPath.split("/").pop() || 
+        (link.getAttribute('href') === "#" && currentPath.endsWith("dashboard.html"))) {
+        link.classList.add('active');
+    }
+});
+</script>
 </body>
 </html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livesupport - Analytics</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+ <div class="top-grid">
+
+  <!-- LIVE TICKETS -->
+  <div class="card big">
+    <h3>Live tickets</h3>
+    <h1 id="liveTickets">0</h1>
+    <p>Open</p>
+
+    <h2 id="unassignedTickets">0</h2>
+    <p>Unassigned</p>
+  </div>
+
+  <!-- RESPONSE TIME -->
+  <div class="card">
+    <h3>Response time</h3>
+    <h1 id="responseTime">0 min</h1>
+    <p>FRT</p>
+
+    <h2 id="sla">0%</h2>
+    <p>Within SLA</p>
+  </div>
+
+  <!-- CSAT -->
+  <div class="card csat">
+    <h3>CSAT</h3>
+    <h1 id="csat">0%</h1>
+    <p>Today</p>
+  </div>
+
+  <!-- TOP SOLVERS -->
+  <div class="card">
+    <h3>Top ticket solvers</h3>
+    <div id="topAgents"></div>
+  </div>
+
+</div>
+
+
+
+    <div class="dashboard">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2 class="logo">LiveSupport</h2>
+    <nav class="menu">
+        <a href="dashboard.html">Inbox</a>
+        <a href="tickets.html" class="active">Tickets</a>
+        <a href="analytics.html">Analytics</a>
+        <a href="knowledge.html">Knowledge Base</a>
+        <a href="settings.html">Settings</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <div class="main">
+    <header class="topbar">
+      <div class="branch">
+          Branch: <strong>Ikeja Branch</strong>
+      </div>
+      <div class="top-right">
+          <span>Staff: <span id="staffName">Loading...</span></span>
+          <a href="/logout"><button class="logout-btn">Logout</button></a>
+      </div>
+
+
+
+<script>
+    function updateTopSection(data) {
+  document.getElementById('liveTickets').innerText = data.open;
+  document.getElementById('unassignedTickets').innerText = data.unassigned;
+
+  document.getElementById('responseTime').innerText =
+    Math.round(data.responseTime) + " min";
+
+  document.getElementById('sla').innerText =
+    Math.round(data.sla) + "%";
+
+  document.getElementById('csat').innerText =
+    Math.round(data.csat) + "%";
+
+  // Top agents list
+  const container = document.getElementById('topAgents');
+  container.innerHTML = "";
+
+  data.topAgents.forEach(agent => {
+    const div = document.createElement('div');
+    div.classList.add('agent-row');
+
+    div.innerHTML = `
+      <span>${agent.agent_name}</span>
+      <span>${agent.solved}</span>
+    `;
+
+    container.appendChild(div);
+  });
+}
+</script>
+
+<script>
+// Highlight the active sidebar link
+const sidebarLinks = document.querySelectorAll('.sidebar .menu a');
+const currentPath = window.location.pathname;
+
+sidebarLinks.forEach(link => {
+    // Remove any existing active class
+    link.classList.remove('active');
+
+    // Compare href with current path
+    if (link.getAttribute('href') === currentPath.split("/").pop() || 
+        (link.getAttribute('href') === "#" && currentPath.endsWith("dashboard.html"))) {
+        link.classList.add('active');
+    }
+});
+</script>
+</body>
+</html>
