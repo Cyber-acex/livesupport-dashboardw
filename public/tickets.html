@@ -88,6 +88,8 @@ Please visit again.
   </div>
 </div>
 
+
+
 <script>
 const modal = document.getElementById("ticketModal");
 const openBtn = document.getElementById("createTicketBtn");
@@ -139,16 +141,28 @@ async function loadTickets() {
   emptyState.style.display = "none";
 
   data.forEach(t => {
-    const div = document.createElement("div");
-    div.classList.add("ticketItem");
+  const div = document.createElement("div");
+  div.classList.add("ticketItem");
 
-    div.innerHTML = `
+  // Ticket content with print button
+  div.innerHTML = `
+    <div class="ticket-header">
+      <button class="printTicketBtn">Print</button>
       <h4>Ticket #${t.id} (${new Date(t.created_at).toLocaleString()})</h4>
-      <pre>${t.content}</pre>
-    `;
+    </div>
+    <pre>${t.content}</pre>
+  `;
 
-    ticketList.appendChild(div);
-  });
+  // Add click event for this ticket's print button
+  div.querySelector(".printTicketBtn").onclick = () => {
+    const printWindow = window.open('', '', 'height=600,width=800');
+    printWindow.document.write('<pre>' + t.content + '</pre>');
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  ticketList.appendChild(div);
+});
 }
 
 // Print ticket
