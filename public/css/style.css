@@ -426,3 +426,119 @@ body {
   text-align: right;
 }
 
+/* Remove that big space at top */
+.content {
+    padding: 20px;
+    margin: 0;
+}
+
+/* Top bar layout (THIS aligns like your screenshot) */
+.tickets-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+/* Title */
+.tickets-topbar h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+/* Button style (matches your UI) */
+.create-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.create-btn:hover {
+    background: #1d4ed8;
+}
+
+/* Tickets list */
+.tickets-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Ticket card */
+.ticketItem {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+/* Empty text */
+#emptyState {
+    margin: 5px 0 10px 0;
+    color: #555;
+}
+
+
+/* ===== TICKETS PAGE FIX ===== */
+
+.tickets-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.tickets-header h1 {
+    margin: 0;
+    font-size: 26px;
+}
+
+/* Button styled like your dashboard */
+.btn-primary {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+/* Remove excessive spacing */
+.content {
+    padding: 20px !important;
+}
+
+/* Ticket list */
+.tickets-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Ticket card */
+.ticketItem {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    transition: 0.2s ease;
+}
+
+.ticketItem:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* Empty text */
+#emptyState {
+    margin: 5px 0 10px;
+    color: #6b7280;
+}

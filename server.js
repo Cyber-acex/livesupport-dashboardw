@@ -270,6 +270,38 @@ app.get("/webhook", (req, res) => {
 
 });
 
+//API TO SAVE TICKETS//
+app.post("/api/tickets", (req, res) => {
+    const { content } = req.body;
+
+    db.query(
+        "INSERT INTO tickets (content) VALUES (?)",
+        [content],
+        (err, result) => {
+            if (err) {
+                console.log(err);
+                return res.sendStatus(500);
+            }
+            res.json({ id: result.insertId });
+        }
+    );
+});
+
+//API TO GET TICKETS//
+app.get("/api/tickets", (req, res) => {
+    db.query(
+        "SELECT * FROM tickets ORDER BY created_at DESC",
+        (err, results) => {
+            if (err) {
+                console.log(err);
+                return res.sendStatus(500);
+            }
+            res.json(results);
+        }
+    );
+});
+
+
 //Start server👇//
 
 app.listen(3000, () => {

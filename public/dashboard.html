@@ -82,7 +82,9 @@
                 <strong>John Doe</strong>
                 <span class="channel">WhatsApp</span>
             </div>
-
+<div style="text-align:right; margin-bottom:5px;">
+    <button id="scroll-down-btn" class="ai-btn">⬇️ Scroll to Bottom</button>
+</div>
             <div class="messages" id="chat-messages">
                 <div class="message customer">
                     Where is my order?
@@ -440,7 +442,14 @@ function renderTickets() {
 
 </script>
 
+<script>
+const scrollBtn = document.getElementById("scroll-down-btn");
+const chatBox = document.getElementById("chat-messages");
 
+scrollBtn.onclick = () => {
+    chatBox.scrollTop = chatBox.scrollHeight;
+};
+</script>
 
 </body>
 </html>

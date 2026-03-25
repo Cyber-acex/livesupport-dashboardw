@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
-<script src="/server.js" defer></script>
+
 <div class="dashboard">
 
   <!-- SIDEBAR -->
@@ -33,14 +33,19 @@
       </div>
     </header>
 
+    <!-- CONTENT -->
     <section class="content">
-      <h1>Tickets</h1>
-      <div id="ticketList">
-        <p>No tickets yet.</p>
-      </div>
-      <button class="action-btn" id="createTicketBtn">Create Ticket</button>
-    </section>
 
+      <div class="tickets-header">
+        <h1>Tickets</h1>
+        <button id="createTicketBtn" class="action-btn">Create Ticket</button>
+      </div>
+
+      <p id="emptyState">No tickets yet.</p>
+
+      <div id="ticketList" class="tickets-list"></div>
+
+    </section>
   </div>
 
 </div>
@@ -50,10 +55,11 @@
   <div class="modal-content">
     <span class="close-btn">&times;</span>
     <h2>Restaurant Payment Ticket</h2>
+
     <textarea id="ticketText" spellcheck="false">
 Restaurant Name
 123 Main St, Lagos, Nigeria
-+1 (555) 176-2972 | support@restaurant.com
++1 (555) 176-2972 | livesupportdashboard@gmail.com
 __________________________________________
 Ticket #: 10045   Date: 00/00/0000
 Table: 00   Time: 00:00
@@ -74,6 +80,7 @@ __________________________________________
 Thank you for dining with us!
 Please visit again.
     </textarea>
+
     <div class="modal-actions">
       <button id="saveTicket" class="ai-btn primary">Save</button>
       <button id="printTicket" class="ai-btn success">Print</button>
@@ -82,14 +89,13 @@ Please visit again.
 </div>
 
 <script>
-let tickets = [];
-
 const modal = document.getElementById("ticketModal");
 const openBtn = document.getElementById("createTicketBtn");
 const closeBtn = document.querySelector(".close-btn");
 const saveBtn = document.getElementById("saveTicket");
 const printBtn = document.getElementById("printTicket");
 const ticketList = document.getElementById("ticketList");
+const emptyState = document.getElementById("emptyState");
 
 // Open modal
 openBtn.onclick = () => modal.style.display = "block";
@@ -98,43 +104,70 @@ openBtn.onclick = () => modal.style.display = "block";
 closeBtn.onclick = () => modal.style.display = "none";
 
 // Close modal on outside click
-window.onclick = (e) => { if(e.target==modal) modal.style.display="none"; }
-
-// Save ticket
-saveBtn.onclick = () => {
-    const content = document.getElementById("ticketText").value;
-    const ticket = { id: tickets.length+1, content, date: new Date().toLocaleString() };
-    tickets.push(ticket);
-    modal.style.display = "none";
-    renderTickets();
+window.onclick = (e) => {
+  if (e.target === modal) modal.style.display = "none";
 };
 
-// Render ticket list
-function renderTickets() {
-    ticketList.innerHTML = "";
-    if(tickets.length===0){ ticketList.innerHTML="<p>No tickets yet.</p>"; return; }
-    tickets.forEach(t => {
-        const div = document.createElement("div");
-        div.classList.add("ticketItem");
-        div.innerHTML = `<h4>Ticket #${t.id} (${t.date})</h4><pre>${t.content}</pre>`;
-        ticketList.appendChild(div);
-    });
+// Save ticket
+saveBtn.onclick = async () => {
+  const content = document.getElementById("ticketText").value;
+
+  await fetch("/api/tickets", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ content })
+  });
+
+  modal.style.display = "none";
+  loadTickets();
+};
+
+// Load tickets from backend
+async function loadTickets() {
+  const res = await fetch("/api/tickets");
+  const data = await res.json();
+
+  ticketList.innerHTML = "";
+
+  if (data.length === 0) {
+    emptyState.style.display = "block";
+    return;
+  }
+
+  emptyState.style.display = "none";
+
+  data.forEach(t => {
+    const div = document.createElement("div");
+    div.classList.add("ticketItem");
+
+    div.innerHTML = `
+      <h4>Ticket #${t.id} (${new Date(t.created_at).toLocaleString()})</h4>
+      <pre>${t.content}</pre>
+    `;
+
+    ticketList.appendChild(div);
+  });
 }
 
 // Print ticket
 printBtn.onclick = () => {
-    const ticketContent = document.getElementById("ticketText").value;
-    const printWindow = window.open('', '', 'height=600,width=800');
-    printWindow.document.write('<pre>'+ticketContent+'</pre>');
-    printWindow.document.close();
-    printWindow.print();
-}
+  const ticketContent = document.getElementById("ticketText").value;
+  const printWindow = window.open('', '', 'height=600,width=800');
+  printWindow.document.write('<pre>' + ticketContent + '</pre>');
+  printWindow.document.close();
+  printWindow.print();
+};
 
 // Load staff name
 fetch("/api/user")
-.then(res=>res.json())
-.then(data=>document.getElementById("staffName").textContent=data.role)
-.catch(err=>console.log("User fetch error",err));
+  .then(res => res.json())
+  .then(data => document.getElementById("staffName").textContent = data.role)
+  .catch(err => console.log("User fetch error", err));
+
+// Load tickets on page load
+loadTickets();
 </script>
 
 </body>
