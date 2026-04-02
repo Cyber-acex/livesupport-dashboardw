@@ -52,7 +52,7 @@ staffSendBtn.addEventListener("click", function () {
     const messageText = staffInput.value.trim();
     if (!messageText) return;
 
-    addMessage(messageText, "customer"); // reuse styling for now
+    addMessage(messageText, "ai"); // staff messages are blue
     staffInput.value = "";
 });
 
@@ -99,7 +99,8 @@ document.getElementById("add-note").addEventListener("click", function () {
 
 socket.on("newMessage", function (data) {
 
-    addMessage(data.message, "customer");
+    const messageType = data.sender === "sent" ? "ai" : "customer";
+    addMessage(data.message, messageType);
 
 });
 

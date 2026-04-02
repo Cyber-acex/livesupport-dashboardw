@@ -172,7 +172,7 @@ async function loadMessages(conversationId, isEscalated = false) {
 function appendMessage(msg) {
     const div = document.createElement("div");
     div.classList.add("message");
-    div.classList.add(msg.sender === "agent" ? "ai" : "customer");
+    div.classList.add(msg.sender === "sent" ? "ai" : "customer");
 
     // Message text
     const messageText = document.createElement("div");
