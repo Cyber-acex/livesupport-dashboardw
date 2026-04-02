@@ -1,60 +1,477 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="./css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LiveSupport - Knowledge Base</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <style>
+    
+  </style>
 </head>
 <body>
-    <div class="dashboard">
-
+     <div class="dashboard">
     <!-- SIDEBAR -->
     <aside class="sidebar">
         <h2 class="logo">LiveSupport</h2>
-
         <nav class="menu">
-            <a href="#" class="active">Inbox</a>
+            <a href="dashboard.html" class="active">Inbox</a>
             <a href="./tickets.html">Tickets</a>
             <a href="analytics.html">Analytics</a>
             <a href="knowledge.html">Knowledge Base</a>
             <a href="settings.html">Settings</a>
         </nav>
     </aside>
-
     <!-- MAIN AREA -->
     <div class="main">
-
         <!-- TOPBAR -->
         <header class="topbar">
             <div class="branch">
                 Branch: <strong>Ikeja Branch</strong>
             </div>
             <div class="top-right">
-
 <span>Staff: <span id="staffName">Loading...</span></span>
-
 <a href="/logout">
 <button class="logout-btn">Logout</button>
 </a>
-
 </div>
-        </header>
+</header>
+<h1 class="brain">Knowledge Base</h1>
+
+<input type="text" id="searchBar" placeholder="Search articles...">
+
+<h1 class="help">HELP</h1>
+<div class="article">
+  <h2>How to handle tickets?</h2>
+  <div class="fruit">
+    <p>Step 1: Check the ticket queue.<br>
+    Step 2: Assign yourself if available.<br>
+    Step 3: Respond within 24 hours.<br>
+    Step 4: Close the ticket after resolution.</p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>How to reset password?</h2>
+  <div class="fruit">
+    <p>Go to your staff profile → click "Reset Password" → follow the instructions sent to your email.</p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>How to escalate a ticket?</h2>
+  <div class="fruit">
+    <p>If a ticket requires admin attention, click "Escalate" → choose the admin → add a note → submit.</p>
+  </div>
+</div>
+
+<div class="article">
+    <h2>How to Escalate a chat?</h2>
+    <div class="fruit">
+        <p>If a chat requires admin attention (when being currently handled by a staff)</p>
+    </div>
+</div>
+
+<div class="article">
+  <h2>Handling High Volume of Customer Requests</h2>
+  <div class="fruit">
+<p>
+In a busy customer support environment, handling a high volume of requests efficiently is critical.
+When multiple customers are reaching out at the same time, it is important to remain organized and
+focused to avoid errors and delays.
+</p>
+
+<p>
+Start by prioritizing requests based on urgency. Issues that affect service availability or involve
+multiple users should be handled first. Less critical requests can be queued and addressed in order.
+</p>
+
+<p>
+Using quick replies or saved responses can significantly reduce the time spent typing repetitive
+answers. This allows support agents to focus more on understanding customer issues rather than typing.
+</p>
+
+<p>
+It is also important to maintain clear communication. Even if a solution is not immediately available,
+inform the customer that their request is being reviewed. This helps build trust and prevents frustration.
+</p>
+
+<p>
+Proper time management is essential. Avoid spending too much time on a single issue when other customers
+are waiting. If necessary, escalate complex problems to the appropriate team.
+</p>
+
+<p>
+Finally, always review your responses before sending them. Accuracy and clarity are just as important
+as speed when dealing with customer requests.
+</p></div>
+</div>
+
+<div class="article">
+  <h2>Ticket Documentation and Record Keeping</h2>
+  <div class="fruit">
+
+<p>
+Maintaining proper documentation for every ticket is an essential part of an effective support system.
+Each ticket should contain clear and detailed information about the issue, actions taken, and final resolution.
+</p>
+
+<p>
+When creating or updating a ticket, always include relevant details such as timestamps, customer information,
+and descriptions of the problem. This ensures that anyone reviewing the ticket can quickly understand the situation.
+</p>
+
+<p>
+Accurate documentation helps improve teamwork. If a ticket needs to be transferred to another agent,
+they can easily continue from where the previous agent stopped without confusion.
+</p>
+
+<p>
+It also plays a key role in analytics. Recorded data can be used to identify common issues, measure response times,
+and improve overall system performance.
+</p>
+
+<p>
+Avoid using vague or incomplete notes. Instead of writing "issue fixed", explain what was done to fix the issue.
+This adds value for future reference.
+</p>
+
+<p>
+Consistent record keeping helps maintain professionalism and ensures that the support process remains transparent
+and reliable.
+</p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>Communication Skills for Support Agents</h2>
+  <div class="fruit">
+
+<p>
+Effective communication is one of the most important skills for any support agent. The way you communicate
+with customers directly affects their experience and satisfaction.
+</p>
+
+<p>
+Always start with a polite greeting and address the customer respectfully. This creates a positive first impression.
+</p>
+
+<p>
+When responding to issues, be clear and direct. Avoid unnecessary technical jargon unless it is absolutely required.
+If technical terms must be used, explain them in a simple way.
+</p>
+
+<p>
+Active listening is also important. Carefully read or listen to the customer's concern before responding.
+Do not interrupt or make assumptions.
+</p>
+
+<p>
+Tone matters a lot in written communication. Since customers cannot hear your voice, your choice of words
+must reflect professionalism and empathy.
+</p>
+
+<p>
+Always end conversations on a positive note by confirming that the issue has been resolved or asking if further
+assistance is needed.
+</p>
+
+<p>
+Strong communication builds trust, reduces misunderstandings, and improves the overall support experience.
+</p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>Escalation Process in Customer Support</h2>
+  <div class="fruit">
+
+<p>
+Not all issues can be resolved at the first level of support. Some problems require escalation to more experienced
+team members or specialized departments.
+</p>
+
+<p>
+Understanding when to escalate is important. If an issue is beyond your knowledge, involves system errors,
+or requires administrative access, it should be escalated immediately.
+</p>
+
+<p>
+Before escalating, ensure that all necessary information is included in the ticket. This includes customer details,
+steps already taken, and any relevant screenshots or logs.
+</p>
+
+<p>
+Proper escalation helps reduce resolution time and prevents repeated work. It also ensures that the customer
+receives the best possible support.
+</p>
+
+<p>
+After escalation, continue to monitor the ticket. Follow up if needed to ensure that the issue is resolved promptly.
+</p>
+
+<p>
+Never leave a customer without feedback. Inform them that the issue has been escalated and provide updates
+as progress is made.
+</p>
+
+<p>
+A well-managed escalation process improves efficiency and maintains customer confidence in the support system.
+</p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>Maintaining System Performance and Reliability</h2>
+  <div class="fruit">
+
+<p>
+System performance plays a major role in the effectiveness of any support dashboard. Slow or unresponsive systems
+can negatively impact both agents and customers.
+</p>
+
+<p>
+Regularly monitor system performance to ensure that everything is running smoothly. Check server status,
+database connections, and network stability.
+</p>
+
+<p>
+If performance issues are detected, take immediate action. This may include restarting services,
+optimizing database queries, or clearing unnecessary data.
+</p>
+
+<p>
+Keeping the system updated is also important. Ensure that all software components are running the latest
+stable versions to avoid bugs and security vulnerabilities.
+</p>
+
+<p>
+Backup data regularly to prevent loss in case of system failure. Reliable backups ensure that operations
+can continue without major disruptions.
+</p>
+
+<p>
+A well-maintained system provides a smooth experience for both staff and customers, improving overall productivity.
+</p>
+</div><br>
+
+<h1 class="faq">FAQS</h1>
+
+<h2 class="faqheading">Frequently Asked Questions</h2><br>
+
+<div class="article">
+  <h2>How do I create a new ticket?</h2>
+  <div class="fruit">
+    <p>
+      To create a new ticket, navigate to the Tickets section from the sidebar.
+      Click on the "Create Ticket" button and fill in the required details such as
+      customer name, issue title, and description.
+    </p>
+    <p>
+      Once submitted, the ticket will appear in the ticket list where it can be tracked
+      and managed until resolution.
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>Why are my messages not updating in real-time?</h2>
+  <div class="fruit">
+    <p>
+      If your messages are not updating automatically, it may be due to a network issue
+      or a problem with the real-time connection.
+    </p>
+    <p>
+      Ensure that your internet connection is stable and that the server is running.
+      You can also refresh the page if necessary.
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>How do I assign a ticket to myself?</h2>
+  <div class="fruit">
+    <p>
+      Open the ticket you want to work on and click the "Assign to Me" button.
+      This will mark the ticket as being handled by you.
+    </p>
+    <p>
+      Always ensure you are available before assigning tickets to avoid delays
+      in response time.
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>What should I do if a customer is not responding?</h2>
+  <div class="fruit">
+    <p>
+      If a customer does not respond after your message, wait for a reasonable amount
+      of time before sending a follow-up message.
+    </p>
+    <p>
+      If there is still no response, you may mark the ticket as pending or inactive
+      depending on your system workflow.
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>How do I escalate a ticket?</h2>
+  <div class="fruit">
+    <p>
+      To escalate a ticket, open it and click the "Escalate" button.
+      Select the appropriate admin or department and add a note explaining the issue.
+    </p>
+    <p>
+      Escalation should be used for complex issues that cannot be resolved at your level.
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>Can I edit a ticket after creating it?</h2>
+  <div class="fruit">
+    <p>
+      Yes, tickets can be edited if changes are needed. Open the ticket and click
+      the edit option to update the information.
+    </p>
+    <p>
+      Make sure all updates are accurate to avoid confusion for other staff members.
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>What does the analytics dashboard show?</h2>
+  <div class="fruit">
+    <p>
+      The analytics dashboard provides insights such as message traffic, number of
+      tickets created, response times, and system performance.
+    </p>
+    <p>
+      These metrics help monitor staff efficiency and improve overall service quality.
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>How can I improve my response time?</h2>
+  <div class="fruit">
+    <p>
+      Stay active on the dashboard and monitor incoming messages closely.
+      Use quick replies or templates for common questions.
+    </p>
+    <p>
+      Avoid delays by handling tickets promptly and minimizing distractions.
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>What should I do if the system is slow?</h2>
+  <div class="fruit">
+    <p>
+      Check your internet connection and refresh the page. If the issue persists,
+      it may be a server-related problem.
+    </p>
+    <p>
+      Report the issue to the technical team if performance does not improve.
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>How do I log out of the system?</h2>
+  <div class="fruit">
+    <p>
+      Click the "Logout" button located at the top right corner of the dashboard.
+      This will securely end your session.
+    </p>
+    <p>
+      Always log out after use, especially on shared devices, to protect your account.
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>Can multiple staff handle the same ticket?</h2>
+  <div class="fruit">
+    <p>
+      Typically, one staff member is assigned to a ticket to avoid confusion.
+      However, collaboration may occur through notes or escalation.
+    </p>
+    <p>
+      Always communicate clearly when working with others on the same issue.
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <h2>What happens when a ticket is closed?</h2>
+  <div class="fruit">
+    <p>
+      When a ticket is closed, it is marked as resolved and removed from active
+      ticket lists.
+    </p>
+    <p>
+      Closed tickets are still stored for future reference and analytics.
+    </p>
+  </div>
+</div>
+
+<script>
+ 
+const articles = document.querySelectorAll('.article');
+
+articles.forEach(article => {
+  const title = article.querySelector('h2');
+  const content = article.querySelector('.fruit');
+
+  title.addEventListener('click', () => {
+    // toggle show/hide
+    if (content.style.display === 'block') {
+      content.style.display = 'none';
+    } else {
+      content.style.display = 'block';
+    }
+  });
+});
 
 
+  // Simple search filter
+const searchBar = document.getElementById('searchBar');
 
 
+searchBar.addEventListener('input', () => {
+  const query = searchBar.value.toLowerCase();
+
+  articles.forEach(article => {
+    const title = article.querySelector('h2').textContent.toLowerCase();
+    const contentDiv = article.querySelector('.fruit');
+    const content = contentDiv.textContent.toLowerCase();
+
+    if (title.includes(query) || content.includes(query)) {
+      article.style.display = 'block';
+
+      // 🔥 auto open matching result
+      contentDiv.style.display = 'block';
+    } else {
+      article.style.display = 'none';
+      contentDiv.style.display = 'none';
+    }
+  });
+});
+</script>
 
 <!--GET THE BLUE NAV BAR HIGHLIGHTER-->
 <script>
 // Highlight the active sidebar link
 const sidebarLinks = document.querySelectorAll('.sidebar .menu a');
 const currentPath = window.location.pathname;
-
 sidebarLinks.forEach(link => {
     // Remove any existing active class
     link.classList.remove('active');
-
     // Compare href with current path
     if (link.getAttribute('href') === currentPath.split("/").pop() || 
         (link.getAttribute('href') === "#" && currentPath.endsWith("dashboard.html"))) {
@@ -62,6 +479,17 @@ sidebarLinks.forEach(link => {
     }
 });
 </script>
+<script>
+// Load staff name (same as tickets page)
+fetch("/api/user")
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("staffName").textContent = data.role;
+  })
+  .catch(err => console.log("User fetch error", err));
+</script>
+
+
 
 </body>
 </html>

@@ -2,52 +2,47 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LiveSupport Dashboard</title>
     <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/timestamp.css">
 </head>
 <body>
-
 <div class="dashboard">
-
     <!-- SIDEBAR -->
     <aside class="sidebar">
         <h2 class="logo">LiveSupport</h2>
-
         <nav class="menu">
             <a href="#" class="active">Inbox</a>
             <a href="./tickets.html">Tickets</a>
-            <a href="analytics.html">Analytics</a>
-            <a href="knowledge.html">Knowledge Base</a>
-            <a href="settings.html">Settings</a>
+            <a href="./analytics.html">Analytics</a>
+            <a href="./knowledge.html">Knowledge Base</a>
+            <a href="./settings.html">Settings</a>
         </nav>
     </aside>
-
     <!-- MAIN AREA -->
     <div class="main">
-
         <!-- TOPBAR -->
         <header class="topbar">
             <div class="branch">
                 Branch: <strong>Ikeja Branch</strong>
             </div>
             <div class="top-right">
-
 <span>Staff: <span id="staffName">Loading...</span></span>
-
 <a href="/logout">
 <button class="logout-btn">Logout</button>
 </a>
-
 </div>
         </header>
-
+        <!-- NOTIFICATION BAR -->
+        <div id="notificationBar" class="notification-bar" style="display: none; background: #ff6b6b; color: white; padding: 10px; text-align: center; position: relative; z-index: 1000;">
+            <span id="notificationText">New message received!</span>
+            <button id="closeNotification" class="close-btn" style="background: none; border: none; color: white; font-size: 20px; position: absolute; right: 10px; top: 5px; cursor: pointer;">&times;</button>
+        </div>
         <!-- CONTENT -->
 <section class="content">
-
     <h1>Inbox</h1>
-
     <div class="inbox-container">                                        
-
         <!-- FILTERS -->
         <div class="filters">
             <button class="filter active">New</button>
@@ -57,31 +52,34 @@
             <button class="filter">Refunds</button>
             <button class="filter">Delivery Issues</button>
         </div>
-
         <!-- CONVERSATION LIST -->
         <div class="conversation-list">
-
     <div class="conversation active">
         <div class="name">John Doe</div>
         <div class="preview">Where is my order?</div>
         <div class="meta">WhatsApp • 2m ago</div>
     </div>
-
     <div class="conversation">
         <div class="name">Sarah K</div>
         <div class="preview">I want a refund</div>
         <div class="meta">Instagram • 5m ago</div>
     </div>
-
 </div>
-
         <!-- CHAT PANEL -->
         <div class="chat-panel">
-
             <div class="chat-header">
-                <strong>John Doe</strong>
-                <span class="channel">WhatsApp</span>
-            </div>
+    <strong id="chatName">John Doe</strong>
+    <span class="channel">WhatsApp</span>
+    <span id="escalatedBadge" style="
+        display:none;
+        background:red;
+        color:white;
+        padding:4px 10px;
+        border-radius:6px;
+        margin-left:10px;
+        font-size:12px;
+    ">Escalated</span>
+</div>
 <div style="text-align:right; margin-bottom:5px;">
     <button id="scroll-down-btn" class="ai-btn">⬇️ Scroll to Bottom</button>
 </div>
@@ -89,30 +87,25 @@
                 <div class="message customer">
                     Where is my order?
                 </div>
-
                 <div class="message ai">
                     Your order is on the way. ETA 15 minutes.
                 </div>
             </div>
             <!-- AI SUGGESTION BOX -->
 <div class="ai-suggestion">
-
     <div class="ai-header">
         🤖 AI Suggested Reply
         <span style="background:#10b981; color:white; padding:3px 8px; border-radius:6px; font-size:12px; margin-left:8px;">
         Confidence: 87%
     </div>
-
     <textarea id="ai-text">
 Your order is currently out for delivery and should arrive within 15 minutes. Thank you for your patience!
     </textarea>
-
     <div class="ai-actions">
         <button class="ai-btn primary" id="ai-send">Send</button>
         <button class="ai-btn">Edit</button>
-        <button class="ai-btn warning">Escalate</button>
+        <button class="ai-btn warning escalate-btn">Escalate</button>
     </div>
-
 </div>
             <div class="chat-input">
                 <input type="text" id="staff-input" placeholder="Type a reply..." />
@@ -125,11 +118,9 @@ Your order is currently out for delivery and should arrive within 15 minutes. Th
 </div>
 </div>
             </div>
-
         </div>
         <!-- INFO PANEL -->
 <div class="info-panel">
-
     <h3>Customer Info</h3>
     <div class="info-box">
         <p><strong>Name:</strong> John Doe</p>
@@ -137,7 +128,6 @@ Your order is currently out for delivery and should arrive within 15 minutes. Th
         <p><strong>Total Orders:</strong> 12</p>
         <p><strong>Risk Flag:</strong> None</p>
     </div>
-
     <h3>Active Order</h3>
     <div class="info-box">
         <p><strong>Order ID:</strong> #ORD-1023</p>
@@ -145,52 +135,31 @@ Your order is currently out for delivery and should arrive within 15 minutes. Th
         <p><strong>ETA:</strong> 15 minutes</p>
         <p><strong>Items:</strong> Chicken Burger, Coke</p>
     </div>
-
     <h3>Quick Actions</h3>
     <div class="actions">
         <button class="action-btn">Create Ticket</button>
-        <button class="action-btn warning">Escalate</button>
+        <button class="action-btn warning escalate-btn">Escalate</button>
         <button class="action-btn success">Offer Voucher</button>
     </div>
-
 </div>
     </div>
-
 </div>
 </section>
-
     </div>
-
 </div>
-
 <!-- TICKET MODAL -->
 <div id="ticketModal" class="modal">
   <div class="modal-content">
     <span class="close-btn">&times;</span>
     <h2>Restaurant Payment Ticket</h2>
     <textarea id="ticketText" spellcheck="false">
-Restaurant Name
-123 Main St, Lagos, Nigeria
-+1 (555) 176-2972 | support@restaurant.com
-__________________________________________
-Ticket #: 10045   Date: 00/00/0000
-Table: 00   Time: 00:00
-Server: [Server Name]
-__________________________________________
-Items | Qty | Price | Total
-__________________________________________
-???????? | 0 | ₦0 | ₦0
-???????? | 0 | ₦0 | ₦0
-???????? | 0 | ₦0 | ₦0
-__________________________________________
-Subtotal: | | | ₦
-VAT (7.5%): | | | ₦
-Service Charge (5%): | | | ₦
-__________________________________________
-Total Amount: | | | ₦
-__________________________________________
-Thank you for dining with us!
-Please visit again.
+Ticket ID: #1023
+Submitted by: ......
+Time: 14:32, 25 Mar 2026
+Status: Open
+Message: ".........."
+[Reply] [Escalate] [Print]
+---------------------------------------------
     </textarea>
     <div class="modal-actions">
       <button id="saveTicket" class="ai-btn primary">Save</button>
@@ -198,137 +167,19 @@ Please visit again.
     </div>
   </div>
 </div>
-
 <!--ALL THE SCRIPTS START FROM HERE-->
-<script src="http://localhost:3000/socket.io/socket.io.js"></script>
-<script src="./js/app.js"></script>
-
 
 <script>
-let currentConversation = null;
-
-// LOAD CONVERSATIONS
-async function loadConversations() {
-    const res = await fetch("/api/conversations");
-    const data = await res.json();
-
-    const list = document.querySelector(".conversation-list");
-    list.innerHTML = "";
-
-    data.forEach(convo => {
-        const div = document.createElement("div");
-        div.classList.add("conversation");
-
-        div.innerHTML = `
-            <div class="name">${convo.phone}</div>
-            <div class="preview">Click to open</div>
-            <div class="meta">WhatsApp</div>
-        `;
-
-        div.onclick = () => loadMessages(convo.id, convo.phone);
-
-        list.appendChild(div);
-    });
-}
-
-// LOAD MESSAGES
-async function loadMessages(convoId, phone) {
-    currentConversation = convoId;
-
-    const res = await fetch(`/api/messages/${convoId}`);
-    const messages = await res.json();
-
-    const chatBox = document.getElementById("chat-messages");
-    chatBox.innerHTML = "";
-
-    messages.forEach(msg => {
-        const div = document.createElement("div");
-
-        div.classList.add("message");
-        div.classList.add(msg.sender === "customer" ? "customer" : "ai");
-
-        div.textContent = msg.message;
-
-        chatBox.appendChild(div);
-    });
-
-    // update header name
-    document.querySelector(".chat-header strong").textContent = phone;
-}
-
-// SEND MESSAGE
-document.getElementById("staff-send").onclick = async () => {
-
-    const input = document.getElementById("staff-input");
-    const message = input.value;
-
-    if (!message || !currentConversation) return;
-
-    await fetch("/api/send-message", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            conversation_id: currentConversation,
-            message: message
-        })
-    });
-
-    input.value = "";
-
-    loadMessages(currentConversation);
-};
-
-// LOAD ON START
-loadConversations();
-</script>
-<script>
-
 fetch("/api/user")
 .then(response => response.json())
 .then(data => {
-
     document.getElementById("staffName").textContent = data.role;
-
 })
 .catch(error => {
-
     console.log("User fetch error:", error);
-
 });
-
 </script>
 <!---->
-<script>
-const socket = io();
-
-// Listen for new messages
-socket.on("newMessage", (data) => {
-
-    // Only update current open chat
-    if (data.conversation_id == currentConversation) {
-
-        const chatBox = document.getElementById("chat-messages");
-
-        const div = document.createElement("div");
-        div.classList.add("message");
-
-        div.classList.add(
-            data.sender === "customer" ? "customer" : "ai"
-        );
-
-        div.textContent = data.message;
-
-        chatBox.appendChild(div);
-
-        // auto scroll
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-});
-</script>
-
 
 <script>
 // GET ELEMENTS
@@ -336,24 +187,20 @@ const modal = document.getElementById("ticketModal");
 const openBtn = document.querySelector(".action-btn"); // the first 'Create Ticket' button
 const closeBtn = document.querySelector(".close-btn");
 const printBtn = document.getElementById("printTicket");
-
 // OPEN MODAL
 openBtn.onclick = () => {
   modal.style.display = "block";
 }
-
 // CLOSE MODAL
 closeBtn.onclick = () => {
   modal.style.display = "none";
 }
-
 // CLOSE IF CLICK OUTSIDE MODAL
 window.onclick = (event) => {
   if(event.target == modal){
     modal.style.display = "none";
   }
 }
-
 
 // PRINT TICKET
 printBtn.onclick = () => {
@@ -364,38 +211,31 @@ printBtn.onclick = () => {
   printWindow.print();
 }
 </script>
-
 <script>
 // STORE TICKETS
 let tickets = [];
-
 // OPEN TICKET SECTION
 const ticketsBtn = document.getElementById("ticketsBtn");
 const inboxSection = document.querySelector(".content h1").parentElement;
 const ticketSection = document.getElementById("ticketSection");
-
 ticketsBtn.onclick = () => {
     inboxSection.style.display = "none"; // hide inbox
     ticketSection.style.display = "block"; // show tickets
 };
-
 // OPEN MODAL
 openBtn.onclick = () => {
     modal.style.display = "block";
 }
-
 // CLOSE MODAL
 closeBtn.onclick = () => {
     modal.style.display = "none";
 }
-
 // CLOSE IF CLICK OUTSIDE MODAL
 window.onclick = (event) => {
   if(event.target == modal){
     modal.style.display = "none";
   }
 }
-
 // PRINT TICKET
 printBtn.onclick = () => {
   const ticketContent = document.getElementById("ticketText").value;
@@ -404,26 +244,21 @@ printBtn.onclick = () => {
   printWindow.document.close();
   printWindow.print();
 }
-
 // SAVE TICKET
 const saveBtn = document.getElementById("saveTicket");
 saveBtn.onclick = () => {
     const ticketContent = document.getElementById("ticketText").value;
-
     // create a ticket object
     const ticket = {
         id: tickets.length + 1,
         content: ticketContent,
         date: new Date().toLocaleString()
     };
-
     tickets.push(ticket);
     modal.style.display = "none"; // close modal
-
     // update ticket list
     renderTickets();
 };
-
 // RENDER TICKETS IN TICKET SECTION
 function renderTickets() {
     const list = document.getElementById("ticketList");
@@ -439,27 +274,21 @@ function renderTickets() {
     });
 }
 
-
 </script>
-
 <script>
 const scrollBtn = document.getElementById("scroll-down-btn");
 const chatBox = document.getElementById("chat-messages");
-
 scrollBtn.onclick = () => {
     chatBox.scrollTop = chatBox.scrollHeight;
 };
 </script>
-
 <script>
 // Highlight the active sidebar link
 const sidebarLinks = document.querySelectorAll('.sidebar .menu a');
 const currentPath = window.location.pathname;
-
 sidebarLinks.forEach(link => {
     // Remove any existing active class
     link.classList.remove('active');
-
     // Compare href with current path
     if (link.getAttribute('href') === currentPath.split("/").pop() || 
         (link.getAttribute('href') === "#" && currentPath.endsWith("dashboard.html"))) {
@@ -467,5 +296,210 @@ sidebarLinks.forEach(link => {
     }
 });
 </script>
+
+<script>
+// LOAD ESCALATED FROM STORAGE
+let escalatedChats = JSON.parse(localStorage.getItem("escalatedChats")) || [];
+let resolvedChats = JSON.parse(localStorage.getItem("resolvedChats")) || [];
+// ESCALATE FUNCTION
+function escalateChat() {
+    if (!currentConversation) {
+        alert("Open a chat first!");
+        return;
+    }
+    const chatName = document.getElementById("chatName").textContent;
+    const escalation = {
+        id: currentConversation,
+        name: chatName,
+        time: new Date().toLocaleString()
+    };
+    // prevent duplicates
+    const exists = escalatedChats.find(c => c.id === currentConversation);
+    if (!exists) {
+        escalatedChats.push(escalation);
+    }
+    // SAVE TO LOCAL STORAGE
+    localStorage.setItem("escalatedChats", JSON.stringify(escalatedChats));
+    // SHOW BADGE
+    document.getElementById("escalatedBadge").style.display = "inline-block";
+    alert("Chat escalated!");
+}
+// ATTACH EVENT TO ALL ESCALATE BUTTONS
+document.querySelectorAll(".escalate-btn").forEach(btn => {
+    btn.onclick = escalateChat;
+});
+// SHOW BADGE IF ALREADY ESCALATED
+function checkEscalationStatus(convoId) {
+    const found = escalatedChats.find(c => c.id == convoId);
+    const badge = document.getElementById("escalatedBadge");
+    if (found) {
+        badge.style.display = "inline-block";
+    } else {
+        badge.style.display = "none";
+    }
+}
+// MODIFY YOUR loadMessages FUNCTION
+const originalLoadMessages = loadMessages;
+loadMessages = async function(convoId, phone) {
+    await originalLoadMessages(convoId, phone);
+    document.getElementById("chatName").textContent = phone;
+    checkEscalationStatus(convoId);
+};
+// FILTER: SHOW ESCALATED CHATS
+document.querySelectorAll(".filter").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll(".filter").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const filterText = btn.textContent.trim();
+        // Save selected filter
+        localStorage.setItem("activeFilter", filterText);
+        if (filterText === "Escalated") {
+            renderEscalatedChats();
+        } else if (filterText === "Resolved") {
+            renderResolvedChats();
+        } else {
+            loadConversations(); // reload normal chats
+        }
+    });
+});
+// RENDER ESCALATED CHATS
+function renderEscalatedChats() {
+    const list = document.querySelector(".conversation-list");
+    list.innerHTML = "";
+    if (escalatedChats.length === 0) {
+        // Show message when no escalated chats
+        const emptyDiv = document.createElement("div");
+        emptyDiv.classList.add("no-chats-message");
+        emptyDiv.textContent = "No escalated chats.";
+        emptyDiv.style.textAlign = "center";
+        emptyDiv.style.color = "#888";
+        emptyDiv.style.padding = "20px";
+        emptyDiv.style.fontStyle = "italic";
+        list.appendChild(emptyDiv);
+        return;
+    }
+    escalatedChats.forEach(chat => {
+        const div = document.createElement("div");
+        div.classList.add("conversation");
+        div.style.position = "relative"; // needed for positioning the button
+        div.innerHTML = `
+            <div class="name">${chat.name}</div>
+            <div class="preview">Escalated</div>
+            <div class="meta">⏱ ${chat.time}</div>
+            <!-- Unescalate button -->
+            <button class="unescalate-btn" title="Unescalate">×</button>
+        `;
+        // Unescalate button action
+        div.querySelector(".unescalate-btn").onclick = (e) => {
+    e.stopPropagation(); // prevent opening chat
+    if (confirm(`Unescalate chat with ${chat.name}?`)) {
+        // Remove from escalatedChats
+        escalatedChats = escalatedChats.filter(c => c.id !== chat.id);
+        localStorage.setItem("escalatedChats", JSON.stringify(escalatedChats));
+        // Add to resolvedChats with timestamp
+        const resolved = {
+            id: chat.id,
+            name: chat.name,
+            time: new Date().toLocaleString()
+        };
+        resolvedChats.push(resolved);
+        localStorage.setItem("resolvedChats", JSON.stringify(resolvedChats));
+        // Re-render list
+        renderEscalatedChats();
+        // Hide badge if currently open
+        if (currentConversation === chat.id) {
+            document.getElementById("escalatedBadge").style.display = "none";
+        }
+    }
+};
+        div.onclick = () => loadMessages(chat.id, chat.name);
+        list.appendChild(div);
+    });
+}
+function renderResolvedChats() {
+    const list = document.querySelector(".conversation-list");
+    list.innerHTML = "";
+    resolvedChats.forEach(chat => {
+        const div = document.createElement("div");
+        div.classList.add("conversation");
+        div.innerHTML = `
+            <div class="name">${chat.name}</div>
+            <div class="preview">Resolved</div>
+            <div class="meta">✅ ${chat.time}</div>
+        `;
+        // Clicking opens chat normally
+        div.onclick = () => loadMessages(chat.id, chat.name);
+        list.appendChild(div);
+    });
+}
+</script>
+<script>
+// Escalate button logic
+function escalateCurrentChat() {
+    // Get the current conversation ID and customer name from the UI
+    // (You may need to adjust these selectors based on your actual HTML structure)
+    const chatName = document.getElementById('chatName').textContent.trim();
+    const phoneText = document.querySelector('.info-panel .info-box p strong + br') ?
+        document.querySelector('.info-panel .info-box p strong + br').nextSibling.textContent.trim() :
+        document.querySelector('.info-panel .info-box p:nth-child(2)').textContent.trim();
+    // Try to get the conversation ID from the active conversation in the list
+    let conversationId = null;
+    const activeConv = document.querySelector('.conversation-list .conversation.active');
+    if (activeConv && activeConv.dataset && activeConv.dataset.id) {
+        conversationId = activeConv.dataset.id;
+    } else if (window.currentConversationId) {
+        conversationId = window.currentConversationId;
+    }
+    if (!conversationId) {
+        alert('No conversation selected!');
+        return;
+    }
+    fetch('/api/escalate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversation_id: conversationId, name: chatName })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Chat escalated successfully!');
+            // Optionally update UI, e.g., show badge
+            const badge = document.getElementById('escalatedBadge');
+            if (badge) badge.style.display = 'inline';
+        } else {
+            alert(data.message || 'Already escalated or error occurred.');
+        }
+    })
+    .catch(() => alert('Failed to escalate chat.'));
+}
+
+// Attach to all escalate buttons
+const escalateBtns = document.querySelectorAll('.escalate-btn');
+escalateBtns.forEach(btn => {
+    btn.onclick = escalateCurrentChat;
+});
+// Also attach to the quick action escalate button
+const quickEscalateBtn = document.querySelector('.actions .escalate-btn');
+if (quickEscalateBtn) quickEscalateBtn.onclick = escalateCurrentChat;
+</script>
+<div id="contextMenu" style="
+    position:absolute;
+    background:white;
+    border:1px solid #ddd;
+    padding:10px;
+    display:none;
+    z-index:1000;
+    border-radius:6px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+">
+    <div id="dismissOption" style="cursor:pointer; color:red;">
+        Dismiss
+    </div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://localhost:3000/socket.io/socket.io.js"></script>
+<script src="./js/inbox.js"></script>
+<script src="./js/app.js"></script>
+
 </body>
 </html>

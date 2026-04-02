@@ -1,66 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="./css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LiveSupport - Settings</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <style>
+    .settings-container { display: flex; }
+    .settings-sidebar { width: 220px; background: #2c3e50; color: white; padding: 20px; }
+    .settings-sidebar button {
+      display: block; width: 100%; margin: 10px 0; padding: 10px;
+      background: none; border: none; color: white; text-align: left; cursor: pointer;
+    }
+    .settings-sidebar button:hover { background: #34495e; }
+
+    .settings-content { flex: 1; padding: 20px; }
+    .settings-section { display: none; }
+    .settings-section.active { display: block; }
+
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; }
+    input, select { width: 100%; padding: 8px; }
+  </style>
 </head>
 <body>
-    <div class="dashboard">
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <h2 class="logo">LiveSupport</h2>
+<div class="dashboard">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2 class="logo">LiveSupport</h2>
+    <nav class="menu">
+      <a href="dashboard.html" class="active">Inbox</a>
+      <a href="./tickets.html">Tickets</a>
+      <a href="analytics.html">Analytics</a>
+      <a href="knowledge.html">Knowledge Base</a>
+      <a href="settings.html">Settings</a>
+    </nav>
+  </aside>
 
-        <nav class="menu">
-            <a href="#" class="active">Inbox</a>
-            <a href="./tickets.html">Tickets</a>
-            <a href="analytics.html">Analytics</a>
-            <a href="knowledge.html">Knowledge Base</a>
-            <a href="settings.html">Settings</a>
-        </nav>
-    </aside>
+  <!-- MAIN AREA -->
+  <div class="main">
+    <header class="topbar">
+      <div class="branch">Branch: <strong>Ikeja Branch</strong></div>
+      <div class="top-right">
+        <span>Staff: <span id="staffName">Loading...</span></span>
+        <a href="/logout"><button class="logout-btn">Logout</button></a>
+      </div>
+    </header>
 
-    <!-- MAIN AREA -->
-    <div class="main">
+    <div class="settings-container">
+      <div class="settings-sidebar">
+        <h3>Settings</h3>
+        <button onclick="showSection('account')">Account</button>
+        <button onclick="showSection('notifications')">Notifications</button>
+        <button onclick="showSection('chat')">Chat Settings</button>
+        <button onclick="showSection('tickets')">Ticket Settings</button>
+        <button onclick="showSection('appearance')">Appearance</button>
+      </div>
 
-        <!-- TOPBAR -->
-        <header class="topbar">
-            <div class="branch">
-                Branch: <strong>Ikeja Branch</strong>
-            </div>
-            <div class="top-right">
+      <div class="settings-content">
+        <!-- SUCCESS MESSAGE -->
+        <div id="successMsg" style="display:none; color: green; margin-bottom: 10px;">
+          Settings saved successfully!
+        </div>
 
-<span>Staff: <span id="staffName">Loading...</span></span>
+        <!-- ACCOUNT -->
+        <div id="account" class="settings-section active">
+          <h2>Account Settings</h2>
+          <input type="text" id="displayName" placeholder="Display Name">
+          <input type="email" id="email" placeholder="Email">
+          <input type="password" id="password" placeholder="New Password">
+          <button onclick="saveSettings()">Save Changes</button>
+        </div>
 
-<a href="/logout">
-<button class="logout-btn">Logout</button>
-</a>
+        <!-- NOTIFICATIONS -->
+        <div id="notifications" class="settings-section">
+          <h2>Notification Settings</h2>
+          <label><input type="checkbox" id="msgAlert"> Message Alerts</label>
+          <label><input type="checkbox" id="ticketAlert"> Ticket Alerts</label>
+          <label><input type="checkbox" id="soundAlert"> Sound</label>
+          <button onclick="saveSettings()">Save Changes</button>
+        </div>
 
+        <!-- CHAT -->
+        <div id="chat" class="settings-section">
+          <h2>Chat Settings</h2>
+          <input type="text" id="autoReply" placeholder="Auto Reply">
+          <select id="chatEnabled">
+            <option value="on">On</option>
+            <option value="off">Off</option>
+          </select>
+          <button onclick="saveSettings()">Save Changes</button>
+        </div>
+
+        <!-- TICKETS -->
+        <div id="tickets" class="settings-section">
+          <h2>Ticket Settings</h2>
+          <select id="priority">
+            <option>Low</option>
+            <option>Medium</option>
+            <option>High</option>
+          </select>
+          <select id="autoAssign">
+            <option value="on">On</option>
+            <option value="off">Off</option>
+          </select>
+          <button onclick="saveSettings()">Save Changes</button>
+        </div>
+
+        <!-- APPEARANCE -->
+        <div id="appearance" class="settings-section">
+          <h2>Appearance</h2>
+          <select id="theme">
+            <option>Light</option>
+            <option>Dark</option>
+          </select>
+          <button onclick="saveSettings()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-        </header>
 
-
-
-
-
-<!--GET THE BLUE NAV BAR HIGHLIGHTER-->
 <script>
-// Highlight the active sidebar link
-const sidebarLinks = document.querySelectorAll('.sidebar .menu a');
-const currentPath = window.location.pathname;
+  // Switch sections
+  function showSection(id) {
+    document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
 
-sidebarLinks.forEach(link => {
-    // Remove any existing active class
-    link.classList.remove('active');
-
-    // Compare href with current path
-    if (link.getAttribute('href') === currentPath.split("/").pop() || 
-        (link.getAttribute('href') === "#" && currentPath.endsWith("dashboard.html"))) {
-        link.classList.add('active');
+  // Apply theme
+  function applyTheme(theme) {
+    if (theme === 'Dark') {
+      document.body.style.background = '#1e1e1e';
+      document.body.style.color = '#ffffff';
+    } else {
+      document.body.style.background = '#ffffff';
+      document.body.style.color = '#000000';
     }
-});
+  }
+
+  // Load theme and user settings
+  async function loadSettings() {
+    // Theme from localStorage
+    const savedTheme = localStorage.getItem('theme') || 'Light';
+    applyTheme(savedTheme);
+    const themeSelect = document.getElementById('theme');
+    if (themeSelect) themeSelect.value = savedTheme;
+
+    // Load from server
+    try {
+      const res = await fetch('/api/settings');
+      const data = await res.json();
+
+      document.getElementById('displayName').value = data.displayName || '';
+      document.getElementById('email').value = data.email || '';
+      document.getElementById('autoReply').value = data.autoReply || '';
+      document.getElementById('chatEnabled').value = data.chatEnabled || 'on';
+      document.getElementById('msgAlert').checked = data.msgAlert || false;
+      document.getElementById('ticketAlert').checked = data.ticketAlert || false;
+      document.getElementById('soundAlert').checked = data.soundAlert || false;
+      document.getElementById('priority').value = data.priority || 'Low';
+      document.getElementById('autoAssign').value = data.autoAssign || 'on';
+
+    } catch (err) {
+      console.error("Error loading settings:", err);
+    }
+  }
+
+  // Save settings
+  async function saveSettings() {
+    const settings = {
+      displayName: document.getElementById('displayName').value,
+      email: document.getElementById('email').value,
+      password: document.getElementById('password').value,
+      autoReply: document.getElementById('autoReply').value,
+      chatEnabled: document.getElementById('chatEnabled').value,
+      msgAlert: document.getElementById('msgAlert').checked,
+      ticketAlert: document.getElementById('ticketAlert').checked,
+      soundAlert: document.getElementById('soundAlert').checked,
+      priority: document.getElementById('priority').value,
+      autoAssign: document.getElementById('autoAssign').value
+    };
+
+    // Theme handled separately in localStorage
+    const theme = document.getElementById('theme').value;
+    localStorage.setItem('theme', theme);
+    applyTheme(theme);
+
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+      });
+
+      const msg = document.getElementById('successMsg');
+      msg.style.display = 'block';
+      setTimeout(() => { msg.style.display = 'none'; }, 3000);
+    } catch (err) {
+      console.error("Error saving settings:", err);
+    }
+  }
+
+  // Highlight sidebar
+  const sidebarLinks = document.querySelectorAll('.sidebar .menu a');
+  const currentPath = window.location.pathname.split("/").pop();
+  sidebarLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === currentPath || (currentPath === '' && link.getAttribute('href') === 'dashboard.html')) {
+      link.classList.add('active');
+    }
+  });
+
+  // Load staff name
+  fetch("/api/user")
+    .then(res => res.json())
+    .then(data => { document.getElementById("staffName").textContent = data.role; })
+    .catch(err => console.log("User fetch error", err));
+
+  // Initialize
+  loadSettings();
 </script>
+
 </body>
 </html>

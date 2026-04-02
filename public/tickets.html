@@ -2,8 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LiveSupport - Tickets</title>
   <link rel="stylesheet" href="./css/style.css">
+  <style>
+    .printTicketBtn:hover {
+      background: lightgreen !important;
+    }
+    .escalateBtn:hover {
+      background: lightcoral !important; /* light orange/red */
+    }
+  </style>
 </head>
 <body>
 
@@ -41,6 +50,11 @@
         <button id="createTicketBtn" class="action-btn">Create Ticket</button>
       </div>
 
+      <div id="ticketNotificationBar" class="notification-bar" style="display:none; background: #10b981; color: white; padding: 10px; margin-bottom: 12px; border-radius: 6px; position: relative;">
+        <span id="ticketNotificationText">Ticket created successfully.</span>
+        <button id="ticketNotificationClose" style="position:absolute; right:10px; top:5px; background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
+      </div>
+
       <p id="emptyState">No tickets yet.</p>
 
       <div id="ticketList" class="tickets-list"></div>
@@ -59,11 +73,10 @@
     <textarea id="ticketText" spellcheck="false">
 ---------------------------------------------
 Ticket ID: #1023
-Submitted by: John Doe
+Submitted by: ......
 Time: 14:32, 25 Mar 2026
 Status: Open
-Message: "The printer on the 2nd floor isn’t working."
-[Reply] [Escalate] [Print]
+Message: ".........."
 ---------------------------------------------
     </textarea>
 
@@ -85,6 +98,40 @@ const printBtn = document.getElementById("printTicket");
 const ticketList = document.getElementById("ticketList");
 const emptyState = document.getElementById("emptyState");
 
+// Notification utilities
+const ticketNotificationBar = document.getElementById("ticketNotificationBar");
+const ticketNotificationText = document.getElementById("ticketNotificationText");
+const ticketNotificationClose = document.getElementById("ticketNotificationClose");
+
+function showTicketNotification(message) {
+  if (!ticketNotificationBar || !ticketNotificationText) return;
+  ticketNotificationText.textContent = message;
+  ticketNotificationBar.style.display = "block";
+  clearTimeout(showTicketNotification.timeout);
+  showTicketNotification.timeout = setTimeout(() => {
+    ticketNotificationBar.style.display = "none";
+  }, 5000);
+}
+
+function hideTicketNotification() {
+  if (!ticketNotificationBar) return;
+  ticketNotificationBar.style.display = "none";
+}
+
+ticketNotificationClose.addEventListener("click", hideTicketNotification);
+
+// Pending notification on load
+const pendingTicketNotification = localStorage.getItem("ticketCreatedNotification");
+if (pendingTicketNotification) {
+  try {
+    const ticketData = JSON.parse(pendingTicketNotification);
+    showTicketNotification(`New ticket #${ticketData.id} created.`);
+  } catch (e) {
+    console.error("Invalid ticket notification in storage", e);
+  }
+  localStorage.removeItem("ticketCreatedNotification");
+}
+
 // Open modal
 openBtn.onclick = () => modal.style.display = "block";
 
@@ -100,7 +147,7 @@ window.onclick = (e) => {
 saveBtn.onclick = async () => {
   const content = document.getElementById("ticketText").value;
 
-  await fetch("/api/tickets", {
+  const res = await fetch("/api/tickets", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -108,8 +155,27 @@ saveBtn.onclick = async () => {
     body: JSON.stringify({ content })
   });
 
-  modal.style.display = "none";
-  loadTickets();
+  if (res.ok) {
+    const created = await res.json();
+
+    // Browser alert
+    alert(`Ticket #${created.id} created successfully.`);
+
+    // In-page notification
+    showTicketNotification(`Ticket #${created.id} created successfully.`);
+
+    // Persist notification for dashboard page and so it can be shown there
+    localStorage.setItem("ticketCreatedNotification", JSON.stringify({
+      id: created.id,
+      message: "New ticket created.",
+      timestamp: new Date().toISOString()
+    }));
+
+    modal.style.display = "none";
+    loadTickets();
+  } else {
+    alert("Failed to create ticket. Please try again.");
+  }
 };
 
 // Load tickets from backend
@@ -132,12 +198,26 @@ async function loadTickets() {
 
   // Ticket content with print button
   div.innerHTML = `
-    <div class="ticket-header">
-      <button class="printTicketBtn">Print</button>
+    <div class="ticket-header" style="display: flex; justify-content: space-between; align-items: center;">
       <h4>Ticket #${t.id} (${new Date(t.created_at).toLocaleString()})</h4>
+      <div>
+        <button class="escalateBtn" style="background: red; color: white; border: none; padding: 5px 10px; margin-right: 5px;">Escalate</button>
+        <button class="printTicketBtn" style="background: blue; color: white; border: none; padding: 5px 10px;">Print</button>
+      </div>
     </div>
+    <div class="escalated-label" style="display: ${t.escalated ? 'block' : 'none'}; color: red; font-weight: bold; text-align: center; margin-bottom: 10px; font-size: 18px;">ESCALATED</div>
     <pre>${t.content}</pre>
   `;
+
+  // Add click event for escalate button
+  div.querySelector(".escalateBtn").onclick = async () => {
+    await fetch("/api/escalate-ticket", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ticket_id: t.id })
+    });
+    loadTickets(); // Reload to show the label
+  };
 
   // Add click event for this ticket's print button
   div.querySelector(".printTicketBtn").onclick = () => {

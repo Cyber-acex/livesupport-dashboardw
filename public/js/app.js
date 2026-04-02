@@ -149,3 +149,12 @@ function showError(message) {
   }, 3000);
 }
 
+//AUTO REPLIES//
+const autoReplies = {
+  hello: "Hello! How can we assist you today?",
+  refund: "We have received your refund request. Our team will review it shortly.",
+  payment: "For payment issues, please provide your transaction ID.",
+  complaint: "We're sorry for the inconvenience. Your complaint has been logged.",
+  thanks: "You're welcome! Let us know if you need further assistance."
+};
+
