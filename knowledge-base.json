@@ -1,0 +1,74 @@
+[
+  {
+    "title": "Pizza Prices",
+    "content": "Our pizza prices: Small - $10, Medium - $15, Large - $20. All pizzas include cheese and tomato sauce."
+  },
+  {
+    "title": "Delivery Information",
+    "content": "Free delivery for orders over $25. For orders under $25, delivery fee is $3. Delivery time: 30-45 minutes."
+  },
+  {
+    "title": "Burger Menu",
+    "content": "Classic Burger: $8, Cheese Burger: $9, Double Burger: $12. All burgers come with fries."
+  },
+  {
+    "question": "What are your operating hours?",
+    "answer": "We operate from 10 AM to 10 PM daily, including weekends and holidays."
+  },
+  {
+    "question": "How do I place an order?",
+    "answer": "You can order through our app, website, or by calling +234 7079850849 -FOOD-DELIVERY."
+  },
+   {
+    "title": "I want to speak with a person",
+    "content": "Hold on while i connect you with an agent."
+  },
+   {
+    "title":"I want to report a problem",
+    "content":"A support ticket has been created for you as Ticket #67. I'm sorry to hear that, can you please explain what the problem is"
+   },
+   {
+    "title": "Delivery and Order Complaints",
+    "content": "We’re sorry for any delivery or order issue. If your delivery is late, incorrect, damaged, or missing, please provide your order number, delivery address, and a brief description. We will review the order, contact the driver, and escalate it to support for a refund, replacement, or credit as needed."
+   },
+   {
+    "question": "My order is late, what should I do?",
+    "answer": "Please send us your order number and delivery address. We will check the driver’s status, confirm any delay, and either update the ETA or offer a refund/credit if it cannot be delivered promptly."
+   },
+   {
+    "question": "I received the wrong item, how can I fix it?",
+    "answer": "We’re sorry for the mistake. Provide your order number and the incorrect item details. We will arrange a replacement or issue a refund depending on availability and your preference."
+   },
+   {
+    "question": "Some items are missing from my delivery, what do I do?",
+    "answer": "Please let us know which items are missing and your order number. We will verify the packing records and either resend the missing items, issue a partial refund, or offer a credit."
+   },
+   {
+    "question": "The food arrived cold or damaged, can I get a refund?",
+    "answer": "Yes. Share photos of the damaged or cold food along with your order number. We will escalate the issue and process a refund, replacement, or credit based on the problem."
+   },
+   {
+    "question": "How do I track my delivery?",
+    "answer": "You can track delivery status in the app or on the website using your order number. If the status is unclear, send us the order number and we’ll confirm the current driver location and estimated arrival."
+   },
+   {
+    "question": "Can I change my order after it has been placed?",
+    "answer": "Changes may be possible if the order has not yet been prepared or dispatched. Provide your order number and the requested change; we will check with the kitchen and delivery team and let you know if it can be updated."
+   },
+   {
+    "question": "What happens if the driver can’t find my address?",
+    "answer": "If the driver reports an issue with the address, we will contact you to confirm the details and provide instructions. If needed, we can update the delivery location or arrange a pickup."
+   },
+   {
+    "question": "How long does it take to resolve a delivery complaint?",
+    "answer": "Most delivery complaints are reviewed within 1-2 hours. For refunds, replacements, or credits, we aim to resolve them as quickly as possible and will update you immediately once a decision is made."
+   },
+   {
+    "question": "Can I get a refund for a delayed order?",
+    "answer": "If your order arrives significantly later than the expected delivery window, we can offer a refund, credit, or replacement. Please send your order number so we can assess the delay and provide a suitable resolution."
+   },
+   {
+    "question": "What information do you need to investigate my order issue?",
+    "answer": "We need your order number, delivery address, a description of the problem, and any photos if the items are damaged or incorrect. This helps us speed up investigation and resolve your issue faster."
+   }
+]

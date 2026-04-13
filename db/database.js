@@ -1,4 +1,4 @@
-const mysql = require("mysql2");
+﻿const mysql = require("mysql2");
 
 const db = mysql.createConnection({
     host: process.env.DB_HOST || "localhost",
@@ -7,12 +7,16 @@ const db = mysql.createConnection({
     database: process.env.DB_NAME || "livesupport"
 });
 
-db.connect(err => {
-    if (err) {
-        console.log("Database error:", err);
-    } else {
+function connectDatabase(callback) {
+    db.connect(err => {
+        if (err) {
+            console.error("Database error:", err);
+            callback(err);
+            return;
+        }
         console.log("MySQL connected");
-    }
-});
+        callback();
+    });
+}
 
-module.exports = db;
+module.exports = { db, connectDatabase };

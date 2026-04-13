@@ -5,6 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LiveSupport - Settings</title>
   <link rel="stylesheet" href="./css/style.css">
+  <script>
+    // Apply theme from localStorage immediately to prevent flash
+    (function applyThemeImmediately() {
+      const theme = localStorage.getItem('theme') || 'Light';
+      if (theme === 'Dark') {
+        const style = document.createElement('style');
+        style.id = 'dark-mode-theme';
+        style.textContent = `
+          body { background: #1e1e1e !important; color: #ffffff !important; }
+          input, textarea, select { background: #2d2d2d !important; color: #ffffff !important; border-color: #444 !important; }
+          button { background: #0066cc !important; color: #ffffff !important; }
+          .main, .content, .topbar, .sidebar { background: #1e1e1e !important; color: #ffffff !important; }
+          a { color: #66b3ff !important; }
+          h1, h2, h3, h4, h5, h6 { color: #ffffff !important; }
+          label, span { color: #ffffff !important; }
+        `;
+        document.head.appendChild(style);
+      }
+    })();
+  </script>
   <style>
     .settings-container { display: flex; }
     .settings-sidebar { width: 220px; background: #2c3e50; color: white; padding: 20px; }
@@ -21,6 +41,58 @@
     .form-group { margin-bottom: 15px; }
     label { display: block; margin-bottom: 5px; }
     input, select { width: 100%; padding: 8px; }
+
+    /* Toggle Switch Styles */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    .switch-label {
+      margin-left: 10px;
+      vertical-align: top;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
@@ -76,9 +148,27 @@
         <!-- NOTIFICATIONS -->
         <div id="notifications" class="settings-section">
           <h2>Notification Settings</h2>
-          <label><input type="checkbox" id="msgAlert"> Message Alerts</label>
-          <label><input type="checkbox" id="ticketAlert"> Ticket Alerts</label>
-          <label><input type="checkbox" id="soundAlert"> Sound</label>
+          <div class="form-group">
+            <label class="switch">
+              <input type="checkbox" id="msgAlert">
+              <span class="slider"></span>
+            </label>
+            <span class="switch-label">Message Alerts</span>
+          </div>
+          <div class="form-group">
+            <label class="switch">
+              <input type="checkbox" id="ticketAlert">
+              <span class="slider"></span>
+            </label>
+            <span class="switch-label">Ticket Alerts</span>
+          </div>
+          <div class="form-group">
+            <label class="switch">
+              <input type="checkbox" id="soundAlert">
+              <span class="slider"></span>
+            </label>
+            <span class="switch-label">Sound</span>
+          </div>
           <button onclick="saveSettings()">Save Changes</button>
         </div>
 
@@ -129,15 +219,62 @@
     document.getElementById(id).classList.add('active');
   }
 
-  // Apply theme
+  // Apply theme with full color inversion
   function applyTheme(theme) {
     if (theme === 'Dark') {
       document.body.style.background = '#1e1e1e';
       document.body.style.color = '#ffffff';
+      
+      // Apply dark mode specific styles
+      document.documentElement.style.colorScheme = 'dark';
+      const style = document.createElement('style');
+      style.id = 'dark-mode-theme';
+      style.textContent = `
+        body { background: #1e1e1e !important; color: #ffffff !important; }
+        .main, .content, .topbar, .sidebar, .settings-container, .settings-sidebar, .settings-content { background: #1e1e1e !important; color: #ffffff !important; }
+        input, textarea, select { background: #2d2d2d !important; color: #ffffff !important; border-color: #444 !important; }
+        button { background: #0066cc !important; color: #ffffff !important; }
+        a { color: #66b3ff !important; }
+        h1, h2, h3, h4, h5, h6 { color: #ffffff !important; }
+        label { color: #ffffff !important; }
+      `;
+      if (!document.getElementById('dark-mode-theme')) {
+        document.head.appendChild(style);
+      }
     } else {
       document.body.style.background = '#ffffff';
       document.body.style.color = '#000000';
+      document.documentElement.style.colorScheme = 'light';
+      
+      const darkStyle = document.getElementById('dark-mode-theme');
+      if (darkStyle) darkStyle.remove();
+      
+      // Remove invert filter
+      const elements = document.querySelectorAll('*');
+      elements.forEach(el => {
+        if (el.style.filter === 'invert(1)') {
+          el.style.filter = '';
+        }
+      });
     }
+  }
+
+  // Apply notification settings
+  function applyNotificationSettings(settings) {
+    // Store settings in localStorage for client-side effects
+    localStorage.setItem('msgAlert', settings.msgAlert);
+    localStorage.setItem('ticketAlert', settings.ticketAlert);
+    localStorage.setItem('soundAlert', settings.soundAlert);
+
+    // Request notification permission if any alert is enabled
+    if (settings.msgAlert || settings.ticketAlert) {
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
+
+    // Log the applied settings
+    console.log('Notification settings applied:', settings);
   }
 
   // Load theme and user settings
@@ -163,6 +300,13 @@
       document.getElementById('priority').value = data.priority || 'Low';
       document.getElementById('autoAssign').value = data.autoAssign || 'on';
 
+      // Apply notification settings on load
+      applyNotificationSettings({
+        msgAlert: data.msgAlert || false,
+        ticketAlert: data.ticketAlert || false,
+        soundAlert: data.soundAlert || false
+      });
+
     } catch (err) {
       console.error("Error loading settings:", err);
     }
@@ -180,13 +324,13 @@
       ticketAlert: document.getElementById('ticketAlert').checked,
       soundAlert: document.getElementById('soundAlert').checked,
       priority: document.getElementById('priority').value,
-      autoAssign: document.getElementById('autoAssign').value
+      autoAssign: document.getElementById('autoAssign').value,
+      theme: document.getElementById('theme').value
     };
 
-    // Theme handled separately in localStorage
-    const theme = document.getElementById('theme').value;
-    localStorage.setItem('theme', theme);
-    applyTheme(theme);
+    // Save theme to localStorage
+    localStorage.setItem('theme', settings.theme);
+    applyTheme(settings.theme);
 
     try {
       await fetch('/api/settings', {
@@ -194,6 +338,9 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings)
       });
+
+      // Apply notification settings effects
+      applyNotificationSettings(settings);
 
       const msg = document.getElementById('successMsg');
       msg.style.display = 'block';
@@ -213,11 +360,18 @@
     }
   });
 
-  // Load staff name
+  // Load staff name and account settings
   fetch("/api/user")
     .then(res => res.json())
-    .then(data => { document.getElementById("staffName").textContent = data.role; })
+    .then(data => {
+      // show the user-friendly display name from settings, fallback to role or name
+      const name = data.displayName || data.name || data.role || 'Staff';
+      document.getElementById("staffName").textContent = name;
+    })
     .catch(err => console.log("User fetch error", err));
+
+  // Populate settings on page load
+  window.addEventListener('DOMContentLoaded', loadSettings);
 
   // Initialize
   loadSettings();

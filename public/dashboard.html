@@ -6,6 +6,14 @@
     <title>LiveSupport Dashboard</title>
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/timestamp.css">
+    <script>
+      // Apply theme from localStorage immediately to prevent flash
+      (function applyThemeImmediately() {
+        const theme = localStorage.getItem('theme') || 'Light';
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.classList.toggle('dark-theme', theme === 'Dark');
+      })();
+    </script>
 </head>
 <body>
 <div class="dashboard">
@@ -46,7 +54,7 @@
         <!-- FILTERS -->
         <div class="filters">
             <button class="filter active">New</button>
-            <button class="filter">Waiting</button>
+            <button class="filter">Receipts</button>
             <button class="filter">Escalated</button>
             <button class="filter">Resolved</button>
             <button class="filter">Refunds</button>
@@ -55,12 +63,12 @@
         <!-- CONVERSATION LIST -->
         <div class="conversation-list">
     <div class="conversation active">
-        <div class="name">John Doe</div>
+        <div class="name">Customer 1</div>
         <div class="preview">Where is my order?</div>
         <div class="meta">WhatsApp • 2m ago</div>
     </div>
     <div class="conversation">
-        <div class="name">Sarah K</div>
+        <div class="name">Customer 1</div>
         <div class="preview">I want a refund</div>
         <div class="meta">Instagram • 5m ago</div>
     </div>
@@ -95,28 +103,25 @@
 <div class="ai-suggestion">
     <div class="ai-header">
         🤖 AI Suggested Reply
-        <span style="background:#10b981; color:white; padding:3px 8px; border-radius:6px; font-size:12px; margin-left:8px;">
+        <span id="confidence-label" style="background:#10b981; color:white; padding:3px 8px; border-radius:6px; font-size:12px; margin-left:8px;">
         Confidence: 87%
     </div>
     <textarea id="ai-text">
 Your order is currently out for delivery and should arrive within 15 minutes. Thank you for your patience!
     </textarea>
     <div class="ai-actions">
-        <button class="ai-btn primary" id="ai-send">Send</button>
+        <button class="ai-btn primary" id="ai-send">Use suggestion</button>
         <button class="ai-btn">Edit</button>
-        <button class="ai-btn warning escalate-btn">Escalate</button>
     </div>
 </div>
             <div class="chat-input">
                 <input type="text" id="staff-input" placeholder="Type a reply..." />
                 <button id="staff-send">Send</button>
                 <div class="internal-note-box">
-    <div class="internal-note-box">
-    <button id="add-note">+ Add Internal Note</button>
-    <input type="file" id="internalFileInput" style="display:none;" multiple 
-        accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx" />
-</div>
-</div>
+                    <button id="add-file">+ Add file</button>
+                    <input type="file" id="internalFileInput" style="display:none;" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx" />
+                    <div id="selected-file-display" class="selected-file-info"></div>
+                </div>
             </div>
         </div>
         <!-- INFO PANEL -->
@@ -137,7 +142,7 @@ Your order is currently out for delivery and should arrive within 15 minutes. Th
     </div>
     <h3>Quick Actions</h3>
     <div class="actions">
-        <button class="action-btn">Create Ticket</button>
+        <button id="openTicketModal" class="action-btn">Create Receipt</button>
         <button class="action-btn warning escalate-btn">Escalate</button>
         <button class="action-btn success">Offer Voucher</button>
     </div>
@@ -147,19 +152,35 @@ Your order is currently out for delivery and should arrive within 15 minutes. Th
 </section>
     </div>
 </div>
-<!-- TICKET MODAL -->
+<!-- RECEIPT MODAL -->
 <div id="ticketModal" class="modal">
   <div class="modal-content">
-    <span class="close-btn">&times;</span>
-    <h2>Restaurant Payment Ticket</h2>
+    <span class="close-btn">×</span>
+    <h2>Create Receipt</h2>
     <textarea id="ticketText" spellcheck="false">
-Ticket ID: #1023
-Submitted by: ......
-Time: 14:32, 25 Mar 2026
-Status: Open
-Message: ".........."
-[Reply] [Escalate] [Print]
----------------------------------------------
+[RESTAURANT NAME]
+123 Main St, Lagos, Nigeria
++1 (555) 176-2972 | support@restaurant.com
+__________________________________________
+Ticket #: 10045 Date: 00/00/0000
+Table: 00 Time: 00:00
+Server: [Server Name]
+__________________________________________
+Items | Qty | Price | Total
+__________________________________________
+???????? | 0| ₦0 | ₦0
+???????? | 0| ₦0 | ₦0
+????????? | 0| ₦0 | ₦0
+__________________________________________ 
+Subtotal: | | | ₦
+VAT (7.5%): | | | ₦
+Service Charge (5%):| | | ₦
+__________________________________________
+Total Amount: | | | ₦
+__________________________________________
+Thank you for dining with us!
+Please visit again.
+
     </textarea>
     <div class="modal-actions">
       <button id="saveTicket" class="ai-btn primary">Save</button>
@@ -182,98 +203,61 @@ fetch("/api/user")
 <!---->
 
 <script>
-// GET ELEMENTS
-const modal = document.getElementById("ticketModal");
-const openBtn = document.querySelector(".action-btn"); // the first 'Create Ticket' button
-const closeBtn = document.querySelector(".close-btn");
-const printBtn = document.getElementById("printTicket");
-// OPEN MODAL
-openBtn.onclick = () => {
-  modal.style.display = "block";
-}
-// CLOSE MODAL
-closeBtn.onclick = () => {
-  modal.style.display = "none";
-}
-// CLOSE IF CLICK OUTSIDE MODAL
-window.onclick = (event) => {
-  if(event.target == modal){
-    modal.style.display = "none";
-  }
-}
-
-// PRINT TICKET
-printBtn.onclick = () => {
-  const ticketContent = document.getElementById("ticketText").value;
-  const printWindow = window.open('', '', 'height=600,width=800');
-  printWindow.document.write('<pre>' + ticketContent + '</pre>');
-  printWindow.document.close();
-  printWindow.print();
-}
-</script>
-<script>
 // STORE TICKETS
 let tickets = [];
-// OPEN TICKET SECTION
-const ticketsBtn = document.getElementById("ticketsBtn");
-const inboxSection = document.querySelector(".content h1").parentElement;
-const ticketSection = document.getElementById("ticketSection");
-ticketsBtn.onclick = () => {
-    inboxSection.style.display = "none"; // hide inbox
-    ticketSection.style.display = "block"; // show tickets
-};
-// OPEN MODAL
+
+const modal = document.getElementById("ticketModal");
+const openBtn = document.getElementById("openTicketModal");
+const closeBtn = modal.querySelector(".close-btn");
+const printBtn = document.getElementById("printTicket");
+const saveBtn = document.getElementById("saveTicket");
+
 openBtn.onclick = () => {
-    modal.style.display = "block";
-}
-// CLOSE MODAL
+  modal.style.display = "block";
+};
+
 closeBtn.onclick = () => {
-    modal.style.display = "none";
-}
-// CLOSE IF CLICK OUTSIDE MODAL
+  modal.style.display = "none";
+};
+
 window.onclick = (event) => {
-  if(event.target == modal){
+  if (event.target == modal) {
     modal.style.display = "none";
   }
-}
-// PRINT TICKET
+};
+
 printBtn.onclick = () => {
   const ticketContent = document.getElementById("ticketText").value;
   const printWindow = window.open('', '', 'height=600,width=800');
-  printWindow.document.write('<pre>' + ticketContent + '</pre>');
+  printWindow.document.write(`<!DOCTYPE html><html><head><title>Print Receipt</title></head><body><pre>${ticketContent}</pre></body></html>`);
   printWindow.document.close();
+  printWindow.focus();
   printWindow.print();
-}
-// SAVE TICKET
-const saveBtn = document.getElementById("saveTicket");
-saveBtn.onclick = () => {
-    const ticketContent = document.getElementById("ticketText").value;
-    // create a ticket object
-    const ticket = {
-        id: tickets.length + 1,
-        content: ticketContent,
-        date: new Date().toLocaleString()
-    };
-    tickets.push(ticket);
-    modal.style.display = "none"; // close modal
-    // update ticket list
-    renderTickets();
 };
-// RENDER TICKETS IN TICKET SECTION
-function renderTickets() {
-    const list = document.getElementById("ticketList");
-    list.innerHTML = "";
-    tickets.forEach(ticket => {
-        const div = document.createElement("div");
-        div.classList.add("ticketItem");
-        div.innerHTML = `
-            <h4>Ticket #${ticket.id} (${ticket.date})</h4>
-            <pre>${ticket.content}</pre>
-        `;
-        list.appendChild(div);
-    });
-}
 
+saveBtn.onclick = () => {
+  const ticketContent = document.getElementById("ticketText").value.trim();
+  
+  if (!ticketContent) {
+    alert("Please enter receipt content before saving.");
+    return;
+  }
+
+  // Send to backend to save to database
+  fetch("/api/receipts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: ticketContent })
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert("Receipt saved successfully!");
+  })
+  .catch(err => {
+    console.error("Error saving ticket:", err);
+    alert("Failed to save receipt.");
+  });
+};
 </script>
 <script>
 const scrollBtn = document.getElementById("scroll-down-btn");
@@ -346,22 +330,7 @@ loadMessages = async function(convoId, phone) {
     checkEscalationStatus(convoId);
 };
 // FILTER: SHOW ESCALATED CHATS
-document.querySelectorAll(".filter").forEach(btn => {
-    btn.addEventListener("click", () => {
-        document.querySelectorAll(".filter").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        const filterText = btn.textContent.trim();
-        // Save selected filter
-        localStorage.setItem("activeFilter", filterText);
-        if (filterText === "Escalated") {
-            renderEscalatedChats();
-        } else if (filterText === "Resolved") {
-            renderResolvedChats();
-        } else {
-            loadConversations(); // reload normal chats
-        }
-    });
-});
+// Filter behavior is handled by public/js/inbox.js
 // RENDER ESCALATED CHATS
 function renderEscalatedChats() {
     const list = document.querySelector(".conversation-list");
@@ -432,45 +401,57 @@ function renderResolvedChats() {
         list.appendChild(div);
     });
 }
+function renderNoReceipts() {
+    const list = document.querySelector(".conversation-list");
+    list.innerHTML = "";
+    const emptyDiv = document.createElement("div");
+    emptyDiv.classList.add("no-chats-message");
+    emptyDiv.textContent = "No saved receipts.";
+    emptyDiv.style.textAlign = "center";
+    emptyDiv.style.color = "#888";
+    emptyDiv.style.padding = "20px";
+    emptyDiv.style.fontStyle = "italic";
+    list.appendChild(emptyDiv);
+}
 </script>
 <script>
 // Escalate button logic
-function escalateCurrentChat() {
-    // Get the current conversation ID and customer name from the UI
-    // (You may need to adjust these selectors based on your actual HTML structure)
-    const chatName = document.getElementById('chatName').textContent.trim();
-    const phoneText = document.querySelector('.info-panel .info-box p strong + br') ?
-        document.querySelector('.info-panel .info-box p strong + br').nextSibling.textContent.trim() :
-        document.querySelector('.info-panel .info-box p:nth-child(2)').textContent.trim();
-    // Try to get the conversation ID from the active conversation in the list
+async function escalateCurrentChat() {
+    const chatName = document.getElementById('chatName')?.textContent.trim() || 'Customer';
     let conversationId = null;
     const activeConv = document.querySelector('.conversation-list .conversation.active');
     if (activeConv && activeConv.dataset && activeConv.dataset.id) {
         conversationId = activeConv.dataset.id;
     } else if (window.currentConversationId) {
         conversationId = window.currentConversationId;
+    } else if (typeof currentConversation !== 'undefined') {
+        conversationId = currentConversation;
     }
+
     if (!conversationId) {
-        alert('No conversation selected!');
+        alert('No conversation selected. Open a chat first to escalate.');
         return;
     }
-    fetch('/api/escalate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversation_id: conversationId, name: chatName })
-    })
-    .then(res => res.json())
-    .then(data => {
+
+    try {
+        const response = await fetch('/api/escalate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ conversation_id: conversationId, name: chatName })
+        });
+        const data = await response.json();
+
         if (data.success) {
             alert('Chat escalated successfully!');
-            // Optionally update UI, e.g., show badge
             const badge = document.getElementById('escalatedBadge');
             if (badge) badge.style.display = 'inline';
         } else {
             alert(data.message || 'Already escalated or error occurred.');
         }
-    })
-    .catch(() => alert('Failed to escalate chat.'));
+    } catch (error) {
+        console.error('Escalation error:', error);
+        alert('Failed to escalate chat. Please try again.');
+    }
 }
 
 // Attach to all escalate buttons

@@ -1,115 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LiveSupport - Knowledge Base</title>
-  <link rel="stylesheet" href="./css/style.css">
-  <style>
-    
-  </style>
+	<meta charset="UTF-8">
+	<title>LiveSupport - Knowledge Base</title>
+	<link rel="stylesheet" href="./css/style.css">
+	<script>
+		// Apply theme from localStorage immediately to prevent flash
+		(function applyThemeImmediately() {
+			const theme = localStorage.getItem('theme') || 'Light';
+			if (theme === 'Dark') {
+				const style = document.createElement('style');
+				style.id = 'dark-mode-theme';
+				style.textContent = `
+					body { background: #1e1e1e !important; color: #ffffff !important; }
+					input, textarea, select { background: #2d2d2d !important; color: #ffffff !important; border-color: #444 !important; }
+					button { background: #0066cc !important; color: #ffffff !important; }
+					.main, .content, .topbar, .sidebar { background: #1e1e1e !important; color: #ffffff !important; }
+					a { color: #66b3ff !important; }
+					h1, h2, h3, h4, h5, h6 { color: #ffffff !important; }
+					label, span { color: #ffffff !important; }
+				`;
+				document.head.appendChild(style);
+			}
+		})();
+	</script>
+	<style>
+		.brain {
+			background-color: #1569C4;
+			display: flex;
+			justify-content: center;
+		}
+		.ball {
+			color: #017BFF;
+			border-radius: 9px;
+			font-size: 20px;
+			color: black !important;
+		}
+		.article {
+			border-radius: 16px;
+			color: red !important;
+		}
+		.article .fruit p {
+			color: red !important;
+		}
+		.faqhead{
+			display: flex;
+			justify-content: center;
+			color: red !important;
+		}
+		.faqsub {
+			color: red !important;
+			display: flex;
+			justify-content: center;
+			font-size: 16px;
+		}
+	</style>
 </head>
 <body>
-     <div class="dashboard">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <h2 class="logo">LiveSupport</h2>
-        <nav class="menu">
-            <a href="dashboard.html" class="active">Inbox</a>
-            <a href="./tickets.html">Tickets</a>
-            <a href="analytics.html">Analytics</a>
-            <a href="knowledge.html">Knowledge Base</a>
-            <a href="settings.html">Settings</a>
-        </nav>
-    </aside>
-    <!-- MAIN AREA -->
-    <div class="main">
-        <!-- TOPBAR -->
-        <header class="topbar">
-            <div class="branch">
-                Branch: <strong>Ikeja Branch</strong>
-            </div>
-            <div class="top-right">
-<span>Staff: <span id="staffName">Loading...</span></span>
-<a href="/logout">
-<button class="logout-btn">Logout</button>
-</a>
-</div>
-</header>
-<h1 class="brain">Knowledge Base</h1>
+	<div class="dashboard">
+		<!-- SIDEBAR -->
+		<aside class="sidebar">
+			<h2 class="logo">LiveSupport</h2>
+			<nav class="menu">
+				<a href="dashboard.html" class="active">Inbox</a>
+				<a href="./tickets.html">Tickets</a>
+				<a href="analytics.html">Analytics</a>
+				<a href="knowledge.html">Knowledge Base</a>
+				<a href="settings.html">Settings</a>
+			</nav>
+		</aside>
 
-<input type="text" id="searchBar" placeholder="Search articles...">
+		<!-- MAIN AREA -->
+		<div class="main">
+			<!-- TOPBAR -->
+			<header class="topbar">
+				<div class="branch">
+					Branch: <strong>Ikeja Branch</strong>
+				</div>
+				<div class="top-right">
+					<span>Staff: <span id="staffName">Loading...</span></span>
+					<a href="/logout">
+						<button class="logout-btn">Logout</button>
+					</a>
+				</div>
+			</header>
 
-<h1 class="help">HELP</h1>
-<div class="article">
-  <h2>How to handle tickets?</h2>
-  <div class="fruit">
-    <p>Step 1: Check the ticket queue.<br>
-    Step 2: Assign yourself if available.<br>
-    Step 3: Respond within 24 hours.<br>
-    Step 4: Close the ticket after resolution.</p>
-  </div>
-</div>
+			<h1 class="brain" style="border-radius: 16px;">Knowledge Base</h1>
+			<input type="text" id="searchBar" placeholder="Search articles...">
 
-<div class="article">
-  <h2>How to reset password?</h2>
-  <div class="fruit">
-    <p>Go to your staff profile → click "Reset Password" → follow the instructions sent to your email.</p>
-  </div>
-</div>
+			<div class="article">
+				<h2 class="ball">How to handle tickets?</h2>
+				<div class="fruit">
+					<p>Step 1: Check the ticket queue.<br>
+					Step 2: Assign yourself if available.<br>
+					Step 3: Respond within 24 hours.<br>
+					Step 4: Close the ticket after resolution.</p>
+				</div>
+			</div>
 
-<div class="article">
-  <h2>How to escalate a ticket?</h2>
-  <div class="fruit">
-    <p>If a ticket requires admin attention, click "Escalate" → choose the admin → add a note → submit.</p>
-  </div>
-</div>
+			<div class="article">
+				<h2 class="ball">How to reset password?</h2>
+				<div class="fruit">
+					<p>Go to your staff profile → click "Reset Password" → follow the instructions sent to your email.</p>
+				</div>
+			</div>
 
-<div class="article">
-    <h2>How to Escalate a chat?</h2>
-    <div class="fruit">
-        <p>If a chat requires admin attention (when being currently handled by a staff)</p>
-    </div>
-</div>
+			<div class="article">
+				<h2 class="ball">How to escalate a ticket?</h2>
+				<div class="fruit">
+					<p>If a ticket requires admin attention, click "Escalate" → choose the admin → add a note → submit.</p>
+				</div>
+			</div>
 
-<div class="article">
-  <h2>Handling High Volume of Customer Requests</h2>
-  <div class="fruit">
-<p>
-In a busy customer support environment, handling a high volume of requests efficiently is critical.
-When multiple customers are reaching out at the same time, it is important to remain organized and
-focused to avoid errors and delays.
-</p>
+			<div class="article">
+				<h2 class="ball">How to Escalate a chat?</h2>
+				<div class="fruit">
+					<p>If a chat requires admin attention (when being currently handled by a staff)</p>
+				</div>
+			</div>
 
-<p>
-Start by prioritizing requests based on urgency. Issues that affect service availability or involve
-multiple users should be handled first. Less critical requests can be queued and addressed in order.
-</p>
-
-<p>
-Using quick replies or saved responses can significantly reduce the time spent typing repetitive
-answers. This allows support agents to focus more on understanding customer issues rather than typing.
-</p>
-
-<p>
-It is also important to maintain clear communication. Even if a solution is not immediately available,
-inform the customer that their request is being reviewed. This helps build trust and prevents frustration.
-</p>
-
-<p>
-Proper time management is essential. Avoid spending too much time on a single issue when other customers
-are waiting. If necessary, escalate complex problems to the appropriate team.
-</p>
-
-<p>
-Finally, always review your responses before sending them. Accuracy and clarity are just as important
-as speed when dealing with customer requests.
-</p></div>
-</div>
-
-<div class="article">
-  <h2>Ticket Documentation and Record Keeping</h2>
-  <div class="fruit">
+			<div class="article">
+				<h2 class="ball">Handling High Volume of Customer Requests</h2>
+				<div class="fruit">
+					<p>
+						In a busy customer support environment, handling a high volume of requests efficiently is critical. When multiple customers are reaching out at the same time, it is important to remain organized and focused to avoid errors and delays.
+					</p>
+					<p>
+						Start by prioritizing requests based on urgency. Issues that affect service availability or involve multiple users should be handled first. Less critical requests can be queued and addressed in order.
+					</p>
+					<p>
+						Using quick replies or saved responses can significantly reduce the time spent typing repetitive answers. This allows support agents to focus more on understanding customer issues rather than typing.
+					</p>
+					<p>
+						It is also important to maintain clear communication. Even if a solution is not immediately available, inform the customer that their request is being reviewed. This helps build trust and prevents frustration.
+					</p>
+					<p>
+						Proper time management is essential. Avoid spending too much time on a single issue when other customers are waiting. If necessary, escalate complex problems to the appropriate team.
+					</p>
+					<p>
+						Finally, always review your responses before sending them. Accuracy and clarity are just as important as speed when dealing with customer requests.
+					</p>
+				</div>
+			</div>
+			<div class="article">
+				<h2 class="ball">Ticket Documentation and Record Keeping</h2>
+				<div class="fruit">
 
 <p>
 Maintaining proper documentation for every ticket is an essential part of an effective support system.
@@ -140,14 +175,13 @@ This adds value for future reference.
 Consistent record keeping helps maintain professionalism and ensures that the support process remains transparent
 and reliable.
 </p>
-  </div>
-</div>
+				</div>
+			</div>
 
 <div class="article">
-  <h2>Communication Skills for Support Agents</h2>
-  <div class="fruit">
-
-<p>
+	<h2 class="ball">Communication Skills for Support Agents</h2>
+	<div class="fruit">
+		<p>
 Effective communication is one of the most important skills for any support agent. The way you communicate
 with customers directly affects their experience and satisfaction.
 </p>
@@ -179,14 +213,13 @@ assistance is needed.
 <p>
 Strong communication builds trust, reduces misunderstandings, and improves the overall support experience.
 </p>
-  </div>
+	</div>
 </div>
 
 <div class="article">
-  <h2>Escalation Process in Customer Support</h2>
-  <div class="fruit">
-
-<p>
+	<h2 class="ball">Escalation Process in Customer Support</h2>
+	<div class="fruit">
+		<p>
 Not all issues can be resolved at the first level of support. Some problems require escalation to more experienced
 team members or specialized departments.
 </p>
@@ -218,49 +251,15 @@ as progress is made.
 <p>
 A well-managed escalation process improves efficiency and maintains customer confidence in the support system.
 </p>
-  </div>
+	</div>
 </div>
 
-<div class="article">
-  <h2>Maintaining System Performance and Reliability</h2>
-  <div class="fruit">
+<h1 class="faqhead">FAQS</h1>
 
-<p>
-System performance plays a major role in the effectiveness of any support dashboard. Slow or unresponsive systems
-can negatively impact both agents and customers.
-</p>
-
-<p>
-Regularly monitor system performance to ensure that everything is running smoothly. Check server status,
-database connections, and network stability.
-</p>
-
-<p>
-If performance issues are detected, take immediate action. This may include restarting services,
-optimizing database queries, or clearing unnecessary data.
-</p>
-
-<p>
-Keeping the system updated is also important. Ensure that all software components are running the latest
-stable versions to avoid bugs and security vulnerabilities.
-</p>
-
-<p>
-Backup data regularly to prevent loss in case of system failure. Reliable backups ensure that operations
-can continue without major disruptions.
-</p>
-
-<p>
-A well-maintained system provides a smooth experience for both staff and customers, improving overall productivity.
-</p>
-</div><br>
-
-<h1 class="faq">FAQS</h1>
-
-<h2 class="faqheading">Frequently Asked Questions</h2><br>
+<h2 class="faqsub">Frequently Asked Questions🙋‍♂️</h2>
 
 <div class="article">
-  <h2>How do I create a new ticket?</h2>
+  <h2 class="ball">How do I create a new ticket?</h2>
   <div class="fruit">
     <p>
       To create a new ticket, navigate to the Tickets section from the sidebar.
@@ -275,7 +274,7 @@ A well-maintained system provides a smooth experience for both staff and custome
 </div>
 
 <div class="article">
-  <h2>Why are my messages not updating in real-time?</h2>
+  <h2 class="ball">Why are my messages not updating in real-time?</h2>
   <div class="fruit">
     <p>
       If your messages are not updating automatically, it may be due to a network issue
@@ -289,7 +288,7 @@ A well-maintained system provides a smooth experience for both staff and custome
 </div>
 
 <div class="article">
-  <h2>How do I assign a ticket to myself?</h2>
+  <h2 class="ball">How do I assign a ticket to myself?</h2>
   <div class="fruit">
     <p>
       Open the ticket you want to work on and click the "Assign to Me" button.
@@ -303,7 +302,7 @@ A well-maintained system provides a smooth experience for both staff and custome
 </div>
 
 <div class="article">
-  <h2>What should I do if a customer is not responding?</h2>
+  <h2 class="ball">What should I do if a customer is not responding?</h2>
   <div class="fruit">
     <p>
       If a customer does not respond after your message, wait for a reasonable amount
@@ -317,7 +316,7 @@ A well-maintained system provides a smooth experience for both staff and custome
 </div>
 
 <div class="article">
-  <h2>How do I escalate a ticket?</h2>
+  <h2 class="ball">How do I escalate a ticket?</h2>
   <div class="fruit">
     <p>
       To escalate a ticket, open it and click the "Escalate" button.
@@ -330,7 +329,7 @@ A well-maintained system provides a smooth experience for both staff and custome
 </div>
 
 <div class="article">
-  <h2>Can I edit a ticket after creating it?</h2>
+  <h2 class="ball">Can I edit a ticket after creating it?</h2>
   <div class="fruit">
     <p>
       Yes, tickets can be edited if changes are needed. Open the ticket and click
@@ -343,7 +342,7 @@ A well-maintained system provides a smooth experience for both staff and custome
 </div>
 
 <div class="article">
-  <h2>What does the analytics dashboard show?</h2>
+  <h2 class="ball">What does the analytics dashboard show?</h2>
   <div class="fruit">
     <p>
       The analytics dashboard provides insights such as message traffic, number of
@@ -356,7 +355,7 @@ A well-maintained system provides a smooth experience for both staff and custome
 </div>
 
 <div class="article">
-  <h2>How can I improve my response time?</h2>
+  <h2 class="ball">How can I improve my response time?</h2>
   <div class="fruit">
     <p>
       Stay active on the dashboard and monitor incoming messages closely.
@@ -369,7 +368,7 @@ A well-maintained system provides a smooth experience for both staff and custome
 </div>
 
 <div class="article">
-  <h2>What should I do if the system is slow?</h2>
+  <h2 class="ball">What should I do if the system is slow?</h2>
   <div class="fruit">
     <p>
       Check your internet connection and refresh the page. If the issue persists,
@@ -382,7 +381,7 @@ A well-maintained system provides a smooth experience for both staff and custome
 </div>
 
 <div class="article">
-  <h2>How do I log out of the system?</h2>
+  <h2 class="ball">How do I log out of the system?</h2>
   <div class="fruit">
     <p>
       Click the "Logout" button located at the top right corner of the dashboard.
@@ -395,7 +394,7 @@ A well-maintained system provides a smooth experience for both staff and custome
 </div>
 
 <div class="article">
-  <h2>Can multiple staff handle the same ticket?</h2>
+  <h2 class="ball">Can multiple staff handle the same ticket?</h2>
   <div class="fruit">
     <p>
       Typically, one staff member is assigned to a ticket to avoid confusion.
@@ -408,7 +407,7 @@ A well-maintained system provides a smooth experience for both staff and custome
 </div>
 
 <div class="article">
-  <h2>What happens when a ticket is closed?</h2>
+  <h2 class="ball">What happens when a ticket is closed?</h2>
   <div class="fruit">
     <p>
       When a ticket is closed, it is marked as resolved and removed from active
@@ -420,76 +419,64 @@ A well-maintained system provides a smooth experience for both staff and custome
   </div>
 </div>
 
-<script>
- 
-const articles = document.querySelectorAll('.article');
+			<script>
+				// Simple search filter with auto-expand match, and heading click toggles
+				const searchBar = document.getElementById('searchBar');
+				const articles = document.querySelectorAll('.article');
 
-articles.forEach(article => {
-  const title = article.querySelector('h2');
-  const content = article.querySelector('.fruit');
+				articles.forEach(article => {
+					const heading = article.querySelector('h2');
+					heading.addEventListener('click', () => {
+						article.classList.toggle('open');
+					});
+				});
 
-  title.addEventListener('click', () => {
-    // toggle show/hide
-    if (content.style.display === 'block') {
-      content.style.display = 'none';
-    } else {
-      content.style.display = 'block';
-    }
-  });
-});
+				searchBar.addEventListener('input', () => {
+					const query = searchBar.value.toLowerCase();
+					articles.forEach(article => {
+						const title = article.querySelector('h2').textContent.toLowerCase();
+						const contentDiv = article.querySelector('.fruit');
+						const content = contentDiv.textContent.toLowerCase();
+						if (title.includes(query) || content.includes(query)) {
+							article.style.display = 'block';
+							if (query) {
+								article.classList.add('open');
+							} else {
+								article.classList.remove('open');
+							}
+						} else {
+							article.style.display = 'none';
+							article.classList.remove('open');
+						}
+					});
+				});
+			</script>
 
+			<!--GET THE BLUE NAV BAR HIGHLIGHTER-->
+			<script>
+				// Highlight the active sidebar link
+				const sidebarLinks = document.querySelectorAll('.sidebar .menu a');
+				const currentPath = window.location.pathname;
+				sidebarLinks.forEach(link => {
+					// Remove any existing active class
+					link.classList.remove('active');
+					// Compare href with current path
+					if (link.getAttribute('href') === currentPath.split("/").pop() || (link.getAttribute('href') === "#" && currentPath.endsWith("dashboard.html"))) {
+						link.classList.add('active');
+					}
+				});
+			</script>
 
-  // Simple search filter
-const searchBar = document.getElementById('searchBar');
-
-
-searchBar.addEventListener('input', () => {
-  const query = searchBar.value.toLowerCase();
-
-  articles.forEach(article => {
-    const title = article.querySelector('h2').textContent.toLowerCase();
-    const contentDiv = article.querySelector('.fruit');
-    const content = contentDiv.textContent.toLowerCase();
-
-    if (title.includes(query) || content.includes(query)) {
-      article.style.display = 'block';
-
-      // 🔥 auto open matching result
-      contentDiv.style.display = 'block';
-    } else {
-      article.style.display = 'none';
-      contentDiv.style.display = 'none';
-    }
-  });
-});
-</script>
-
-<!--GET THE BLUE NAV BAR HIGHLIGHTER-->
-<script>
-// Highlight the active sidebar link
-const sidebarLinks = document.querySelectorAll('.sidebar .menu a');
-const currentPath = window.location.pathname;
-sidebarLinks.forEach(link => {
-    // Remove any existing active class
-    link.classList.remove('active');
-    // Compare href with current path
-    if (link.getAttribute('href') === currentPath.split("/").pop() || 
-        (link.getAttribute('href') === "#" && currentPath.endsWith("dashboard.html"))) {
-        link.classList.add('active');
-    }
-});
-</script>
-<script>
-// Load staff name (same as tickets page)
-fetch("/api/user")
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById("staffName").textContent = data.role;
-  })
-  .catch(err => console.log("User fetch error", err));
-</script>
-
-
-
+			<script>
+				// Load staff name (same as tickets page)
+				fetch("/api/user")
+					.then(res => res.json())
+					.then(data => {
+						document.getElementById("staffName").textContent = data.role;
+					})
+					.catch(err => console.log("User fetch error", err));
+			</script>
+		</div>
+	</div>
 </body>
 </html>

@@ -1,7 +1,10 @@
-const socket = io("http://localhost:3000");
-const aiSendBtn = document.getElementById("ai-send");
-const aiText = document.getElementById("ai-text");
-const chatMessages = document.getElementById("chat-messages");
+if (window.inboxAppLoaded) {
+    console.log('Dashboard fallback app.js skipped because inbox.js is active');
+} else {
+    const socket = io("http://localhost:3000");
+    const aiSendBtn = document.getElementById("ai-send");
+    const aiText = document.getElementById("ai-text");
+    const chatMessages = document.getElementById("chat-messages");
 
 const staffSendBtn = document.getElementById("staff-send");
 const staffInput = document.getElementById("staff-input");
@@ -102,6 +105,20 @@ socket.on("newMessage", function (data) {
     const messageType = data.sender === "sent" ? "ai" : "customer";
     addMessage(data.message, messageType);
 
+    // Show browser notification if msgAlert is enabled and message is from customer
+    if (messageType === "customer" && localStorage.getItem('msgAlert') === 'true') {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            const notification = new Notification('New Message', {
+                body: data.message,
+                icon: '/favicon.ico' // or some icon
+            });
+            notification.onclick = function() {
+                window.focus();
+                notification.close();
+            };
+        }
+    }
+
 });
 
 app.post("/tickets", (req, res) => {
@@ -158,4 +175,5 @@ const autoReplies = {
   complaint: "We're sorry for the inconvenience. Your complaint has been logged.",
   thanks: "You're welcome! Let us know if you need further assistance."
 };
+}
 

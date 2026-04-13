@@ -6,6 +6,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LiveSupport Login</title>
+<script>
+  // Apply theme from localStorage immediately to prevent flash
+  (function applyThemeImmediately() {
+    const theme = localStorage.getItem('theme') || 'Light';
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.classList.toggle('dark-theme', theme === 'Dark');
+  })();
+</script>
 
 <style>
 

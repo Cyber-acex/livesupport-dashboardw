@@ -12,6 +12,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@mistralai/mistralai": "^2.2.0",
     "axios": "^1.13.6",
     "body-parser": "^2.2.2",
     "cors": "^2.8.6",
@@ -23,6 +24,7 @@
     "node-fetch": "^2.7.0",
     "openai": "^6.32.0",
     "socket.io": "^4.8.3",
+    "sqlite3": "^6.0.1",
     "twilio": "^5.12.2"
   }
 }
