@@ -9,8 +9,11 @@
     // Apply theme from localStorage immediately to prevent flash
     (function applyThemeImmediately() {
       const theme = localStorage.getItem('theme') || 'Light';
-      document.documentElement.dataset.theme = theme;
-      document.documentElement.classList.toggle('dark-theme', theme === 'Dark');
+      if (theme === 'Dark') {
+        document.documentElement.classList.add('dark-theme');
+      } else {
+        document.documentElement.classList.remove('dark-theme');
+      }
     })();
   </script>
   <style>
@@ -272,6 +275,20 @@ fetch("/api/user")
   .then(res => res.json())
   .then(data => document.getElementById("staffName").textContent = data.role)
   .catch(err => console.log("User fetch error", err));
+
+function applyTicketPageTheme() {
+  const theme = localStorage.getItem('theme') || 'Light';
+  if (theme === 'Dark') {
+    document.documentElement.classList.add('dark-theme');
+  } else {
+    document.documentElement.classList.remove('dark-theme');
+  }
+}
+
+window.addEventListener('storage', (e) => {
+  if (e.key === 'theme') applyTicketPageTheme();
+});
+window.addEventListener('focus', applyTicketPageTheme);
 
 // Load tickets on page load
 loadTickets();

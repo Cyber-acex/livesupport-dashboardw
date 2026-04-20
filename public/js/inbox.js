@@ -1,3 +1,17 @@
+// THEME HANDLING FOR INBOX
+function applyInboxTheme() {
+    const theme = localStorage.getItem('theme') || 'Light';
+    if (theme === 'Dark') {
+        document.body.classList.add('dark-theme');
+    } else {
+        document.body.classList.remove('dark-theme');
+    }
+}
+applyInboxTheme();
+window.addEventListener('storage', function(e) {
+    if (e.key === 'theme') applyInboxTheme();
+});
+window.addEventListener('focus', applyInboxTheme);
 // Connect to Socket.IO server
 const socket = io();
 

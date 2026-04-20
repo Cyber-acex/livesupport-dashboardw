@@ -7,12 +7,15 @@
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/timestamp.css">
     <script>
-      // Apply theme from localStorage immediately to prevent flash
-      (function applyThemeImmediately() {
-        const theme = localStorage.getItem('theme') || 'Light';
-        document.documentElement.dataset.theme = theme;
-        document.documentElement.classList.toggle('dark-theme', theme === 'Dark');
-      })();
+            // Apply theme from localStorage immediately to prevent flash
+            (function applyThemeImmediately() {
+                const theme = localStorage.getItem('theme') || 'Light';
+                if (theme === 'Dark') {
+                    document.body.classList.add('dark-theme');
+                } else {
+                    document.body.classList.remove('dark-theme');
+                }
+            })();
     </script>
 </head>
 <body>
@@ -481,6 +484,27 @@ if (quickEscalateBtn) quickEscalateBtn.onclick = escalateCurrentChat;
 <script src="http://localhost:3000/socket.io/socket.io.js"></script>
 <script src="./js/inbox.js"></script>
 <script src="./js/app.js"></script>
+<script>
+// Listen for theme changes (e.g., after settings change)
+window.addEventListener('storage', function(e) {
+    if (e.key === 'theme') {
+        if (e.newValue === 'Dark') {
+            document.body.classList.add('dark-theme');
+        } else {
+            document.body.classList.remove('dark-theme');
+        }
+    }
+});
+// Also check on page focus (in case theme was changed in another tab)
+window.addEventListener('focus', function() {
+    const theme = localStorage.getItem('theme') || 'Light';
+    if (theme === 'Dark') {
+        document.body.classList.add('dark-theme');
+    } else {
+        document.body.classList.remove('dark-theme');
+    }
+});
+</script>
 
 </body>
 </html>

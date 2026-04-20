@@ -1,4 +1,188 @@
-﻿* {
+﻿/* DARK THEME SUPPORT */
+.dark-theme, .dark-theme body {
+    background: #181c24 !important;
+    color: #e2e8f0 !important;
+}
+
+.dark-theme .dashboard,
+.dark-theme .main,
+.dark-theme .sidebar,
+.dark-theme .topbar,
+.dark-theme .settings-container,
+.dark-theme .settings-sidebar,
+.dark-theme .settings-content,
+.dark-theme .inbox-container,
+.dark-theme .filters,
+.dark-theme .conversation-list,
+.dark-theme .chat-panel,
+.dark-theme .info-panel,
+.dark-theme .ai-suggestion,
+.dark-theme .modal-content {
+    background: #1e232b !important;
+    color: #e2e8f0 !important;
+}
+
+.dark-theme .sidebar,
+.dark-theme .filters {
+    background: linear-gradient(180deg, #10131a 0%, #181c24 100%) !important;
+    color: #e2e8f0 !important;
+}
+
+.dark-theme .filter,
+.dark-theme .filter.active,
+.dark-theme .filter:hover {
+    background: #232a36 !important;
+    color: #e2e8f0 !important;
+    border-color: #2563eb !important;
+}
+
+.dark-theme .conversation-list {
+    background: #181c24 !important;
+    border-right: 1px solid #232a36 !important;
+}
+.dark-theme .conversation {
+    background: #232a36 !important;
+    color: #e2e8f0 !important;
+}
+.dark-theme .conversation.active {
+    background: #2563eb !important;
+    color: #fff !important;
+    border-left: 4px solid #60a5fa !important;
+}
+.dark-theme .conversation .meta {
+    color: #a1a1aa !important;
+}
+.dark-theme .chat-panel {
+    background: #181c24 !important;
+}
+.dark-theme .chat-header {
+    background: #232a36 !important;
+    color: #e2e8f0 !important;
+    border-bottom: 1px solid #232a36 !important;
+}
+.dark-theme .messages {
+    background: #181c24 !important;
+}
+.dark-theme .message.customer {
+    background: #232a36 !important;
+    color: #e2e8f0 !important;
+}
+.dark-theme .message.ai,
+.dark-theme .message.sent {
+    background: #2563eb !important;
+    color: #fff !important;
+}
+.dark-theme .chat-input {
+    background: #232a36 !important;
+    border-top: 1px solid #232a36 !important;
+}
+.dark-theme .chat-input input {
+    background: #232a36 !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #374151 !important;
+}
+.dark-theme .chat-input button {
+    background: #2563eb !important;
+    color: #fff !important;
+}
+.dark-theme .info-panel {
+    background: #181c24 !important;
+    border-left: 1px solid #232a36 !important;
+    color: #e2e8f0 !important;
+}
+.dark-theme .info-box {
+    background: #232a36 !important;
+    color: #e2e8f0 !important;
+}
+.dark-theme .actions .action-btn {
+    background: #2563eb !important;
+    color: #fff !important;
+}
+.dark-theme .actions .action-btn.warning {
+    background: #f59e0b !important;
+    color: #fff !important;
+}
+.dark-theme .actions .action-btn.success {
+    background: #10b981 !important;
+    color: #fff !important;
+}
+.dark-theme .ai-suggestion {
+    background: #232a36 !important;
+    color: #e2e8f0 !important;
+    border-top: 1px solid #232a36 !important;
+}
+.dark-theme .ai-btn,
+.dark-theme .ai-btn.primary,
+.dark-theme .ai-btn.warning {
+    background: #2563eb !important;
+    color: #fff !important;
+}
+.dark-theme .ai-btn.warning {
+    background: #f59e0b !important;
+}
+.dark-theme .ai-btn.success {
+    background: #10b981 !important;
+}
+.dark-theme .modal-content {
+    background: #232a36 !important;
+    color: #e2e8f0 !important;
+}
+.dark-theme .selected-file-info {
+    color: #a1a1aa !important;
+}
+.dark-theme .no-chats-message {
+    color: #a1a1aa !important;
+}
+.dark-theme .logout-btn {
+    background: #e74c3c !important;
+    color: #fff !important;
+}
+.dark-theme .logout-btn:hover {
+    background: #c0392b !important;
+}
+.dark-theme .notification-bar {
+    background: #2d3748 !important;
+    color: #fff !important;
+}
+.dark-theme .close-btn {
+    color: #fff !important;
+}
+.dark-theme .escalated-badge {
+    background: #ef4444 !important;
+    color: #fff !important;
+}
+.dark-theme .ticketItem {
+    background: #232a36 !important;
+    border: 1px solid #2d3748 !important;
+    color: #e2e8f0 !important;
+    padding: 18px;
+    border-radius: 18px;
+    margin-bottom: 18px;
+}
+.dark-theme .ticketItem .ticket-header h4 {
+    color: #e2e8f0 !important;
+}
+.dark-theme .ticketItem pre {
+    background: #1f262f !important;
+    color: #e2e8f0 !important;
+    padding: 16px !important;
+    border-radius: 14px !important;
+}
+.dark-theme .ticketNotificationBar {
+    background: #064e3b !important;
+    color: #d1fae5 !important;
+}
+.dark-theme .printTicketBtn,
+.dark-theme .escalateBtn {
+    color: #fff !important;
+}
+.dark-theme .printTicketBtn {
+    background: #2563eb !important;
+}
+.dark-theme .escalateBtn {
+    background: #dc2626 !important;
+}
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
