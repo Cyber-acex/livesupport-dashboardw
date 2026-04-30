@@ -27,6 +27,20 @@ function loadKnowledgeBase() {
 // Load KB on startup
 loadKnowledgeBase();
 
+// Menu items from knowledge base
+const MENU_ITEMS = {
+    pizza: {
+        small: { name: 'Small Pizza', price: 10 },
+        medium: { name: 'Medium Pizza', price: 15 },
+        large: { name: 'Large Pizza', price: 20 }
+    },
+    burger: {
+        classic: { name: 'Classic Burger', price: 8 },
+        cheese: { name: 'Cheese Burger', price: 9 },
+        double: { name: 'Double Burger', price: 12 }
+    }
+};
+
 function findRelevantKB(message) {
     const keywords = ['price', 'cost', 'menu', 'delivery', 'order', 'hours', 'time', 'pizza', 'burger', 'food', 'previous', 'past', 'history', 'ordered', 'account'];
     const lowerMessage = message.toLowerCase();
@@ -56,7 +70,7 @@ function getOrderHistory(phone) {
         
         // First try: exact normalized match
         db.query(
-            'SELECT items, total_amount, order_date FROM orders WHERE REPLACE(REPLACE(REPLACE(phone, "+", ""), "-", ""), " ", "") = ? ORDER BY order_date DESC LIMIT 5',
+            'SELECT product, total_amount, order_date FROM orders WHERE REPLACE(REPLACE(REPLACE(phone, "+", ""), "-", ""), " ", "") = ? ORDER BY order_date DESC LIMIT 5',
             [normalizedPhone],
             (err, results) => {
                 if (err) {
@@ -69,7 +83,7 @@ function getOrderHistory(phone) {
                 
                 if (results && results.length > 0) {
                     const orderSummary = results.map(order => 
-                        `- ${order.items} ($${order.total_amount}) on ${new Date(order.order_date).toLocaleDateString()}`
+                        `- ${order.product} ($${order.total_amount}) on ${new Date(order.order_date).toLocaleDateString()}`
                     ).join('\n');
                     
                     const totalSpent = results.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
@@ -87,7 +101,7 @@ function getOrderHistory(phone) {
                 // Fallback: try direct phone match
                 console.log("getOrderHistory: No results with normalization, trying exact match with:", phone);
                 db.query(
-                    'SELECT items, total_amount, order_date FROM orders WHERE phone = ? ORDER BY order_date DESC LIMIT 5',
+                    'SELECT product, total_amount, order_date FROM orders WHERE phone = ? ORDER BY order_date DESC LIMIT 5',
                     [phone],
                     (err2, results2) => {
                         if (err2) {
@@ -100,7 +114,7 @@ function getOrderHistory(phone) {
                         
                         if (results2 && results2.length > 0) {
                             const orderSummary = results2.map(order => 
-                                `- ${order.items} ($${order.total_amount}) on ${new Date(order.order_date).toLocaleDateString()}`
+                                `- ${order.product} ($${order.total_amount}) on ${new Date(order.order_date).toLocaleDateString()}`
                             ).join('\n');
                             
                             const totalSpent = results2.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
@@ -148,6 +162,198 @@ function isRequestingStaff(message) {
     return staffKeywords.some(keyword => lowerMessage.includes(keyword));
 }
 
+function extractOrderId(message) {
+    if (!message) return null;
+    const match = message.toUpperCase().match(/\bORD[-_\s]?\d+\b/);
+    if (!match) return null;
+    return match[0].replace(/[_\s]/g, '');
+}
+
+function isOrderIdOnlyMessage(message) {
+    if (!message) return false;
+    const trimmed = message.trim().toUpperCase();
+    return /^ORD[-]?\d+$/.test(trimmed);
+}
+
+function isOrderStatusInquiry(message) {
+    if (!message) return false;
+    const lowerMessage = message.toLowerCase();
+    const orderStatusKeywords = [
+        'order status',
+        'status of my order',
+        'where is my order',
+        'have not seen my order',
+        "haven't seen my order",
+        'not received my order',
+        'track my order',
+        'track order',
+        'order update',
+        'order tracking',
+        'check my order',
+        'delivery status',
+        'where is order',
+        'order is',
+        'status for order'
+    ];
+    return orderStatusKeywords.some(keyword => lowerMessage.includes(keyword));
+}
+
+function getOrderById(orderId) {
+    return new Promise((resolve) => {
+        if (!db || !orderId) {
+            resolve(null);
+            return;
+        }
+
+        db.query(
+            `SELECT o.order_id, o.customer_name, o.items, COALESCE(o.total_amount, o.amount) AS total_amount,
+                    o.status AS order_status, o.order_date,
+                    d.delivery_status, d.rider_name, d.vehicle
+             FROM orders o
+             LEFT JOIN deliveries d ON o.id = d.order_id
+             WHERE o.order_id = ?
+             LIMIT 1`,
+            [orderId],
+            (err, results) => {
+                if (err) {
+                    console.log('getOrderById error:', err);
+                    resolve(null);
+                    return;
+                }
+                if (!results || results.length === 0) {
+                    resolve(null);
+                    return;
+                }
+                resolve(results[0]);
+            }
+        );
+    });
+}
+
+function formatOrderStatusResponse(order) {
+    const orderId = order.order_id;
+    const customerName = order.customer_name || 'Customer';
+    const status = order.delivery_status || order.order_status || 'pending';
+    const total = parseFloat(order.total_amount || 0).toFixed(2);
+    const orderDate = order.order_date ? new Date(order.order_date).toLocaleDateString() : 'unknown date';
+    const riderName = order.rider_name || 'Not assigned';
+    const vehicle = order.vehicle || 'Unknown';
+
+    let response = `I found order ${orderId} for ${customerName}. It was placed on ${orderDate}. `;
+    response += `Current status: ${status}. `;
+    response += `Rider: ${riderName}. `;
+    response += `Vehicle: ${vehicle}. `;
+    response += `Total amount: $${total}.`;
+
+    return response;
+}
+
+function extractOrderItemsFromMessage(message) {
+    const lowerMessage = message.toLowerCase();
+    const orderItems = [];
+    let total = 0;
+
+    const numberWords = {
+        'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+        'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
+    };
+
+    function parseQuantity(str) {
+        if (!str) return 1;
+        const num = parseInt(str, 10);
+        if (!isNaN(num)) return num;
+        return numberWords[str.toLowerCase()] || 1;
+    }
+
+    function addItems(count, itemKey) {
+        for (let i = 0; i < count; i++) {
+            orderItems.push(itemKey);
+        }
+    }
+
+    const pizzaSizes = {
+        'small': 'small pizza',
+        'medium': 'medium pizza',
+        'large': 'large pizza'
+    };
+
+    const burgerTypes = {
+        'classic': 'classic burger',
+        'cheese': 'cheese burger',
+        'double': 'double burger'
+    };
+
+    const friesPattern = /(\d+|one|two|three|four|five|six|seven|eight|nine|ten)?\s*fries/gi;
+    let friesMatch;
+    let friesCount = 0;
+    while ((friesMatch = friesPattern.exec(lowerMessage)) !== null) {
+        friesCount += parseQuantity(friesMatch[1]);
+    }
+
+    const pizzaPattern = /(\d+|one|two|three|four|five|six|seven|eight|nine|ten)?\s*(small|medium|large)\s*pizza/gi;
+    let pizzaMatch;
+    while ((pizzaMatch = pizzaPattern.exec(lowerMessage)) !== null) {
+        const quantity = parseQuantity(pizzaMatch[1]);
+        const size = pizzaMatch[2];
+        if (pizzaSizes[size]) {
+            addItems(quantity, pizzaSizes[size]);
+            total += quantity * MENU_ITEMS.pizza[size].price;
+        }
+    }
+
+    const burgerPattern = /(\d+|one|two|three|four|five|six|seven|eight|nine|ten)?\s*(classic|cheese|double)\s*burger/gi;
+    let burgerMatch;
+    while ((burgerMatch = burgerPattern.exec(lowerMessage)) !== null) {
+        const quantity = parseQuantity(burgerMatch[1]);
+        const type = burgerMatch[2];
+        if (burgerTypes[type]) {
+            addItems(quantity, burgerTypes[type]);
+            total += quantity * MENU_ITEMS.burger[type].price;
+        }
+    }
+
+    if (orderItems.length === 0) {
+        const genericPizzaPattern = /(\d+|one|two|three|four|five|six|seven|eight|nine|ten)?\s*(?:small|medium|large)?\s*pizzas?\b/gi;
+        let genericPizzaMatch;
+        while ((genericPizzaMatch = genericPizzaPattern.exec(lowerMessage)) !== null) {
+            const quantity = parseQuantity(genericPizzaMatch[1]);
+            addItems(quantity, 'pizza');
+            total += quantity * MENU_ITEMS.pizza.medium.price;
+        }
+
+        const genericBurgerPattern = /(\d+|one|two|three|four|five|six|seven|eight|nine|ten)?\s*(?:classic|cheese|double)?\s*burgers?\b/gi;
+        let genericBurgerMatch;
+        while ((genericBurgerMatch = genericBurgerPattern.exec(lowerMessage)) !== null) {
+            const quantity = parseQuantity(genericBurgerMatch[1]);
+            addItems(quantity, 'burger');
+            total += quantity * MENU_ITEMS.burger.cheese.price;
+        }
+    }
+
+    // If the message only contains fries and no priced items, ignore it for order total extraction.
+    if (orderItems.length === 0 && friesCount > 0) {
+        return { items: null, total: 0 };
+    }
+
+    const counts = orderItems.reduce((acc, item) => {
+        acc[item] = (acc[item] || 0) + 1;
+        return acc;
+    }, {});
+
+    const itemSummary = Object.entries(counts)
+        .map(([item, count]) => {
+            if (count === 1) return item;
+            if (item === 'pizza') return `${count} pizzas`;
+            if (item === 'burger') return `${count} burgers`;
+            if (item.endsWith('pizza')) return `${count} ${item.replace(/pizza$/, 'pizzas')}`;
+            if (item.endsWith('burger')) return `${count} ${item.replace(/burger$/, 'burgers')}`;
+            return `${count} ${item}s`;
+        })
+        .join(' and ');
+
+    return { items: itemSummary, total };
+}
+
 function isTicketCreationRequest(message) {
     const lowerMessage = message.toLowerCase();
     const ticketKeywords = [
@@ -166,6 +372,11 @@ function isTicketCreationRequest(message) {
         'issue with',
         'problem with',
         'not working',
+        'problem',
+        'issue',
+        'report',
+        'complaint',
+        'complain',
         'bug report'
     ];
     return ticketKeywords.some(keyword => lowerMessage.includes(keyword));
@@ -218,6 +429,49 @@ function isHandoffReply(message) {
         'you are being transferred'
     ];
     return handoffPhrases.some(keyword => lowerMessage.includes(keyword));
+}
+
+function shouldAskOrderConfirmation(message) {
+    const lowerMessage = message.toLowerCase();
+    const orderPhrases = [
+        'place this order',
+        'place order',
+        'i want to order',
+        "i'd like to order",
+        'i would like to order',
+        'i would like',
+        'i want',
+        'can i get',
+        'i need',
+        'order now',
+        'please order',
+        'send me',
+        "i'll have",
+        "i'll have",
+        'i am ordering',
+        'i am placing',
+        'i am buying',
+        'checkout',
+        'deliver',
+        'deliver to'
+    ];
+    const hasOrderPhrase = orderPhrases.some(phrase => lowerMessage.includes(phrase));
+    const hasFoodKeyword = /\b(pizza|burger|chicken|meal|drink|food|combo|sandwich|taco|order|package|fries)\b/.test(lowerMessage);
+    return hasOrderPhrase && hasFoodKeyword;
+}
+
+function isOrderConfirmationResponse(message) {
+    const lowerMessage = message.toLowerCase().trim();
+    const yesPhrases = ['yes', 'yeah', 'yep', 'sure', 'confirm', 'okay', 'ok', 'go ahead', 'please', 'yes please', 'sure thing'];
+    const noPhrases = ['no', 'nope', 'nah', 'cancel', 'stop', 'dont', "don't", 'never mind', 'not now'];
+    
+    return yesPhrases.some(phrase => lowerMessage.includes(phrase)) || noPhrases.some(phrase => lowerMessage.includes(phrase));
+}
+
+function isPositiveConfirmation(message) {
+    const lowerMessage = message.toLowerCase().trim();
+    const yesPhrases = ['yes', 'yeah', 'yep', 'sure', 'confirm', 'okay', 'ok', 'go ahead', 'please', 'yes please', 'sure thing'];
+    return yesPhrases.some(phrase => lowerMessage.includes(phrase));
 }
 
 function getCustomerName(phone, conversationId) {
@@ -330,10 +584,120 @@ async function createTicket(content, phone = null, conversationId = null) {
     });
 }
 
+async function createOrderFromConversation(conversationId, phone) {
+    return new Promise(async (resolve) => {
+        if (!db || !conversationId) {
+            console.log("createOrderFromConversation: No DB or conversationId");
+            resolve(null);
+            return;
+        }
+
+        // Get recent conversation messages to find the order details
+        const recentMessages = await getRecentConversationMessages(conversationId, 10);
+        
+        // Find the customer's order message and extract items
+        let orderDetails = null;
+        for (let i = recentMessages.length - 1; i >= 0; i--) {
+            const msg = recentMessages[i];
+            if (msg.sender === 'received' || msg.sender === 'customer') { // Customer message
+                const extracted = extractOrderItemsFromMessage(msg.message);
+                if (extracted.items && extracted.total > 0) {
+                    orderDetails = extracted;
+                    break;
+                }
+            }
+        }
+
+        if (!orderDetails) {
+            console.log("createOrderFromConversation: Could not find order details in conversation");
+            resolve(null);
+            return;
+        }
+
+        // Get customer name
+        const customerName = await getCustomerName(phone, conversationId);
+
+        // Generate order ID
+        const orderId = `ORD-${Date.now()}`;
+
+        db.query(
+            'INSERT INTO orders (order_id, customer_name, phone, product, amount, total_amount, status, order_date, conversation_id) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?)',
+            [orderId, customerName, phone || null, orderDetails.items, orderDetails.total, orderDetails.total, 'confirmed', conversationId],
+            (err, result) => {
+                if (err) {
+                    console.log("createOrderFromConversation: Database error:", err);
+                    resolve(null);
+                    return;
+                }
+
+                const order = {
+                    id: result.insertId,
+                    orderId: orderId,
+                    product: orderDetails.items,
+                    total: orderDetails.total,
+                    status: 'confirmed'
+                };
+                console.log("createOrderFromConversation: Order created:", order);
+
+                // Automatically start the delivery simulation using the server route
+                fetch('http://localhost:3000/api/delivery/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ order_id: order.orderId })
+                }).then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Delivery start failed');
+                    }
+                    return response.json();
+                }).then((data) => {
+                    console.log('createOrderFromConversation: Auto delivery simulation started for order', order.orderId, data);
+                }).catch((deliveryErr) => {
+                    console.error('createOrderFromConversation: Failed to auto-start delivery:', deliveryErr);
+                }).finally(() => {
+                    resolve(order);
+                });
+            }
+        );
+    });
+}
+
 async function getMistralReply(message, phone = null, conversationId = null) {
     try {
         console.log("getMistralReply called with phone:", phone, "conversationId:", conversationId);
         
+        // Check if this is a response to an order confirmation
+        if (conversationId && isOrderConfirmationResponse(message)) {
+            if (isPositiveConfirmation(message)) {
+                console.log("Customer confirmed order - creating order");
+                const order = await createOrderFromConversation(conversationId, phone);
+                if (order) {
+                    return `Great! Your order has been confirmed and placed. Order ID: ${order.orderId}. Your ${order.product} will be prepared and delivered soon. Total: $${order.total.toFixed(2)}. Thank you for your business!`;
+                } else {
+                    return "I apologize, but I couldn't process your order at this time. Please try again or contact our support team for assistance.";
+                }
+            } else {
+                console.log("Customer declined order confirmation");
+                return "No problem! Your order has not been placed. If you'd like to modify your order or try again, just let me know!";
+            }
+        }
+        
+        const orderId = extractOrderId(message);
+        const orderStatusRequest = isOrderStatusInquiry(message);
+
+        if (orderId && (orderStatusRequest || isOrderIdOnlyMessage(message))) {
+            const order = await getOrderById(orderId);
+            if (order) {
+                return formatOrderStatusResponse(order);
+            }
+            return `I couldn't find an order with ID ${orderId}. Please double-check the order ID and send it again.`;
+        }
+
+        if (orderStatusRequest && !orderId) {
+            return "Sure! Please provide your Order ID (for example ORD-12345) so I can look up the status of your order.";
+        }
+
         const ticketRequest = isTicketCreationRequest(message);
         const problemReportRequest = isProblemReportRequest(message);
 
@@ -403,9 +767,23 @@ async function getMistralReply(message, phone = null, conversationId = null) {
 
         // Craft a system prompt and user prompt for the support agent
         const systemPrompt = `You are a professional customer support assistant for a food delivery service. Reply directly to the customer without any meta-commentary. Do not start with "Got it", "Here’s how I’d respond", "I would", "As a support agent", or any other explanation of how you are generating the reply. Keep the answer polite, clear, and concise as if you were replying directly to the customer.`;
-        const userPrompt = `Customer message: "${message}"${kbContext}${orderContext}${conversationHistory}
+        let userPrompt = `Customer message: "${message}"${kbContext}${orderContext}${conversationHistory}
 
 If the customer reports a problem, ask clarifying questions and gather details before suggesting a solution. Only offer a human agent connection if the customer explicitly requests a live agent. Keep the response helpful and concise.`;
+        if (shouldAskOrderConfirmation(message)) {
+            const { items, total } = extractOrderItemsFromMessage(message);
+            if (items && total > 0) {
+                userPrompt += `
+
+The customer appears to be placing an order for: ${items}, which comes to $${total}. Ask them exactly: ARE YOU SURE YOU WANT TO PLACE THIS ORDER?
+
+IMPORTANT: Confirm the order details exactly as specified above. Do not add or change items. Do not confirm or save the order until the customer explicitly replies with a positive confirmation.`;
+            } else {
+                userPrompt += `
+
+The customer appears to be placing an order but I couldn't identify the specific items. Ask them to clarify what they want to order from our menu (Pizzas: Small $10, Medium $15, Large $20; Burgers: Classic $8, Cheese $9, Double $12).`;
+            }
+        }
 
         console.log("Sending to Mistral with prompt context (KB: " + (kbContext ? "yes" : "no") + ", Orders: " + (orderContext ? "yes" : "no") + ")");
         

@@ -351,6 +351,9 @@ body {
     border: 1px solid transparent;
 }
 
+.menu a .nav-icon { width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 10px; fill: currentColor; }
+.menu a .nav-label { vertical-align: middle; }
+
 @keyframes buttonPulse {
     0% {
         transform: translateX(0) scale(1);

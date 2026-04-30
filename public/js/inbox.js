@@ -15,6 +15,56 @@ window.addEventListener('focus', applyInboxTheme);
 // Connect to Socket.IO server
 const socket = io();
 
+// Register agent presence after Socket.IO connects
+socket.on('connect', () => {
+    fetch('/api/user').then(r => r.json()).then(u => {
+        if (u && (u.id || u.name)) {
+            socket.emit('agent:register', { userId: u.id, name: u.name || u.role || 'Agent', role: u.role || 'agent' });
+        }
+    }).catch(() => {});
+});
+
+// Presence / typing listeners
+socket.on('presenceUpdate', (agents) => {
+    updatePresenceUI(agents);
+});
+
+socket.on('typing', (data) => {
+    // data: { conversationId, userId, name }
+    if (data && String(data.conversationId) === String(currentConversationId)) {
+        showTypingIndicator(data.name);
+    }
+});
+
+socket.on('stopTyping', (data) => {
+    if (data && String(data.conversationId) === String(currentConversationId)) {
+        clearTypingIndicator();
+    }
+});
+
+function updatePresenceUI(agents) {
+    // Ensure there's a container in the page
+    let el = document.getElementById('agentsOnline');
+    if (!el) return;
+    el.innerHTML = '';
+    agents.forEach(a => {
+        const span = document.createElement('div');
+        span.className = 'agent-item';
+        span.textContent = a.name + (a.activeConversation ? ` (on ${a.activeConversation})` : ' (online)');
+        el.appendChild(span);
+    });
+}
+
+let typingTimeout = null;
+function showTypingIndicator(name) {
+    const el = document.getElementById('typingIndicator');
+    if (!el) return;
+    el.textContent = `${name} is typing...`;
+    if (typingTimeout) clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => { el.textContent = ''; }, 2500);
+}
+function clearTypingIndicator() { const el = document.getElementById('typingIndicator'); if (el) el.textContent = ''; }
+
 
 let currentConversationId = null;
 let conversationCache = [];
@@ -90,6 +140,23 @@ if (fileInput) {
         if (selectedFileDisplay) {
             selectedFileDisplay.textContent = selectedFile ? `Selected: ${selectedFile.name}` : "No file selected.";
         }
+    });
+}
+
+// Typing indicator: emit typing events when agent types
+let _typingEmitTimer = null;
+if (messageInput) {
+    messageInput.addEventListener('input', () => {
+        if (!currentConversationId) return;
+        try { socket.emit('typing', { conversationId: currentConversationId, name: document.getElementById('staffName') ? document.getElementById('staffName').textContent : 'Agent' }); } catch (e) {}
+        if (_typingEmitTimer) clearTimeout(_typingEmitTimer);
+        _typingEmitTimer = setTimeout(() => {
+            try { socket.emit('stopTyping', { conversationId: currentConversationId }); } catch (e) {}
+        }, 1800);
+    });
+
+    messageInput.addEventListener('blur', () => {
+        try { socket.emit('stopTyping', { conversationId: currentConversationId }); } catch (e) {}
     });
 }
 
@@ -249,6 +316,7 @@ function createConversationElement(conv, filter = 'all') {
         window.currentConversation = conv.id;
         loadMessages(conv.id, filter === 'escalated');
         document.querySelector(".chat-header strong").textContent = conv.phone;
+        try { socket.emit('agent:activeConversation', { conversationId: conv.id }); } catch (e) {}
     });
 
     return div;
@@ -404,6 +472,7 @@ function renderLocalItems(items, emptyText) {
             window.currentConversationId = item.id;
             window.currentConversation = item.id;
             loadMessages(item.id, false);
+            try { socket.emit('agent:activeConversation', { conversationId: item.id }); } catch (e) {}
         });
         fragment.appendChild(div);
     });
@@ -542,6 +611,115 @@ async function loadMessages(conversationId, isEscalated = false) {
     }
 
     await fetchAISuggestion(conversationId);
+    // Update the right-hand info panel with customer details and orders
+    try {
+        updateInfoPanel && updateInfoPanel(conversationId);
+    } catch (err) {
+        console.error('updateInfoPanel error:', err);
+    }
+}
+
+// Populate the Customer Info / Active Order panel
+async function updateInfoPanel(conversationId) {
+    if (!conversationId) return;
+
+    // Reset UI
+    const nameEl = document.getElementById('info-name');
+    const phoneEl = document.getElementById('info-phone');
+    const totalOrdersEl = document.getElementById('info-total-orders');
+    const riskEl = document.getElementById('info-risk-flag');
+    const activeIdEl = document.getElementById('active-order-id');
+    const activeStatusEl = document.getElementById('active-order-status');
+    const activeEtaEl = document.getElementById('active-order-eta');
+    const activeItemsEl = document.getElementById('active-order-items');
+
+    if (nameEl) nameEl.textContent = 'Loading...';
+    if (phoneEl) phoneEl.textContent = 'Loading...';
+    if (totalOrdersEl) totalOrdersEl.textContent = '0';
+    if (riskEl) riskEl.textContent = 'None';
+    if (activeIdEl) activeIdEl.textContent = 'None';
+    if (activeStatusEl) activeStatusEl.textContent = '-';
+    if (activeEtaEl) activeEtaEl.textContent = '-';
+    if (activeItemsEl) activeItemsEl.textContent = '-';
+
+    try {
+        // Fetch conversation details
+        const convRes = await fetch(`/api/conversations?id=${encodeURIComponent(conversationId)}`);
+        const convData = await convRes.json();
+        const conv = Array.isArray(convData) ? convData[0] : convData;
+
+        const phone = conv ? (conv.phone || '') : '';
+        const name = conv ? (conv.name || '') : '';
+
+        if (nameEl) nameEl.textContent = name || (phone || 'Unknown');
+        if (phoneEl) phoneEl.textContent = phone || 'Unknown';
+
+        // Get orders summary by phone (if phone exists)
+        if (phone) {
+            try {
+                const summaryRes = await fetch(`/api/orders-summary/${encodeURIComponent(phone)}`);
+                if (summaryRes.ok) {
+                    const summary = await summaryRes.json();
+                    if (totalOrdersEl) totalOrdersEl.textContent = summary.total_orders || 0;
+                    // Also show total spent as risk heuristic (optional)
+                    if (riskEl) {
+                        const spent = parseFloat(summary.total_spent || 0);
+                        if (spent > 500) {
+                            riskEl.textContent = 'High spender';
+                        } else {
+                            riskEl.textContent = 'None';
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn('orders-summary fetch failed', err);
+            }
+
+            // Fetch recent orders to show active order
+            try {
+                const ordersRes = await fetch(`/api/orders/${encodeURIComponent(phone)}`);
+                if (ordersRes.ok) {
+                    const orders = await ordersRes.json();
+                    if (orders && orders.length > 0) {
+                            // Determine if there is an active (open) order. Consider delivered/cancelled states as inactive.
+                            const inactiveStatuses = new Set(['delivered','completed','cancelled','refunded','returned','closed','paid']);
+                            const activeOrder = orders.find(o => {
+                                const s = (o.status || '').toString().toLowerCase();
+                                const d = (o.delivery_status || '').toString().toLowerCase();
+                                // If both status and delivery_status indicate finished state, treat as inactive
+                                if (inactiveStatuses.has(s) || inactiveStatuses.has(d)) return false;
+                                // If order has a status and it's not an inactive tag, consider it active
+                                if (s && !inactiveStatuses.has(s)) return true;
+                                // If delivery_status exists and is not inactive, consider it active
+                                if (d && !inactiveStatuses.has(d)) return true;
+                                return false;
+                            });
+
+                            if (activeOrder) {
+                                if (activeIdEl) activeIdEl.textContent = activeOrder.order_id || activeOrder.id || 'Unknown';
+                                if (activeStatusEl) activeStatusEl.textContent = activeOrder.delivery_status || activeOrder.status || '-';
+                                if (activeItemsEl) activeItemsEl.textContent = activeOrder.product || activeOrder.items || '-';
+                                if (activeEtaEl) activeEtaEl.textContent = activeOrder.eta || activeOrder.delivery_status || '-';
+                            } else {
+                                // No open orders
+                                if (activeIdEl) activeIdEl.textContent = 'No active orders';
+                                if (activeStatusEl) activeStatusEl.textContent = '-';
+                                if (activeItemsEl) activeItemsEl.textContent = '-';
+                                if (activeEtaEl) activeEtaEl.textContent = '-';
+                            }
+                        }
+                }
+            } catch (err) {
+                console.warn('orders fetch failed', err);
+            }
+        } else {
+            // No phone: try to derive name from conversation cache
+            if (nameEl && !name) nameEl.textContent = 'Unknown';
+        }
+
+    } catch (err) {
+        console.error('Failed to load conversation info:', err);
+    }
 }
 
 // ---------------------------
@@ -577,6 +755,111 @@ function appendMessage(msg) {
     messagesContainer.appendChild(div);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
+
+// Translation support: UI state and helper
+const translateToggle = document.getElementById('translate-toggle');
+const translateSelect = document.getElementById('translate-language');
+if (translateToggle && translateSelect) {
+    // Initialize from localStorage
+    // Load from server first, then fallback to localStorage
+    (async () => {
+        try {
+            const res = await fetch('/api/settings');
+            if (res.ok) {
+                const settings = await res.json();
+                const enabled = settings.translate_enabled === 1 || settings.translate_enabled === true;
+                const lang = settings.translate_lang || localStorage.getItem('translateLang') || 'en';
+                translateToggle.checked = !!enabled;
+                translateSelect.value = lang;
+                localStorage.setItem('translateEnabled', enabled ? 'true' : 'false');
+                localStorage.setItem('translateLang', lang);
+            } else {
+                const stored = localStorage.getItem('translateEnabled');
+                const storedLang = localStorage.getItem('translateLang') || 'en';
+                translateToggle.checked = stored === 'true';
+                translateSelect.value = storedLang;
+            }
+        } catch (err) {
+            const stored = localStorage.getItem('translateEnabled');
+            const storedLang = localStorage.getItem('translateLang') || 'en';
+            translateToggle.checked = stored === 'true';
+            translateSelect.value = storedLang;
+        }
+    })();
+
+    translateToggle.addEventListener('change', () => {
+        const val = translateToggle.checked ? 'true' : 'false';
+        localStorage.setItem('translateEnabled', val);
+        // Persist to server
+        fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ translate_enabled: translateToggle.checked })
+        }).catch(err => console.warn('Failed to save settings', err));
+    });
+    translateSelect.addEventListener('change', () => {
+        localStorage.setItem('translateLang', translateSelect.value);
+        // Persist to server
+        fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ translate_lang: translateSelect.value })
+        }).catch(err => console.warn('Failed to save settings', err));
+    });
+}
+
+async function translateText(text, target) {
+    try {
+        const res = await fetch('/api/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, target })
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.translatedText || null;
+    } catch (err) {
+        console.error('translateText error', err);
+        return null;
+    }
+}
+
+// Modify appendMessage to add translated text when enabled
+const _originalAppendMessage = appendMessage;
+appendMessage = function(msg) {
+    _originalAppendMessage(msg);
+    try {
+        const enabled = localStorage.getItem('translateEnabled') === 'true';
+        const target = localStorage.getItem('translateLang') || 'en';
+        if (!enabled) return;
+
+        // Find the last appended message element
+        const last = messagesContainer.lastElementChild;
+        if (!last) return;
+
+        // Only translate customer messages (not outgoing agent/ai messages)
+        const sender = (msg.sender || '').toString().toLowerCase();
+        const outgoing = new Set(['sent', 'ai', 'staff', 'agent', 'assistant']);
+        if (outgoing.has(sender)) return;
+
+        // Call translation endpoint and append tiny translated text
+        (async () => {
+            const translated = await translateText(msg.message, target === 'auto' ? 'en' : target);
+            if (!translated) return;
+            const tl = document.createElement('div');
+            tl.classList.add('translated-text');
+            tl.style.fontStyle = 'italic';
+            tl.style.fontSize = '12px';
+            tl.style.color = '#6b7280';
+            tl.style.marginTop = '6px';
+            tl.textContent = translated;
+            last.appendChild(tl);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        })();
+    } catch (err) {
+        console.error('appendMessage translate hook error', err);
+    }
+};
 
 // ---------------------------
 // Handle sending a message

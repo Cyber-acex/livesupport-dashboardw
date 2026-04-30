@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LiveSupport - Tracking</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/timestamp.css">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  
+  <script>
+    // Apply theme from localStorage immediately to prevent flash
+    (function applyThemeImmediately() {
+      const theme = localStorage.getItem('theme') || 'Light';
+      if (theme === 'Dark') {
+        document.documentElement.classList.add('dark-theme');
+      } else {
+        document.documentElement.classList.remove('dark-theme');
+      }
+    })();
+  </script>
+  
+  <style>
+    .tracking-container {
+      padding: 20px;
+      display: flex;
+      gap: 20px;
+      height: calc(100vh - 120px);
+    }
+
+    .tracking-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tracking-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tracking-header h1 {
+      font-size: 28px;
+      margin: 0;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .search-bar input {
+      flex: 1;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .search-bar button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .search-bar button:hover {
+      background: #0056b3;
+    }
+
+    .search-result {
+      padding: 15px;
+      background: #e7f3ff;
+      border-left: 4px solid #007bff;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      display: none;
+    }
+
+    .search-result.visible {
+      display: block;
+    }
+
+    .search-result-header {
+      font-weight: 600;
+      color: #004085;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .search-result-info {
+      font-size: 13px;
+      color: #004085;
+      line-height: 1.6;
+    }
+
+    .dark-theme .search-bar input {
+      background: #2d2d2d;
+      border-color: #444;
+      color: #fff;
+    }
+
+    .dark-theme .search-result {
+      background: #1a3a52;
+      border-left-color: #0056b3;
+      color: #aaa;
+    }
+
+    .dark-theme .search-result-header,
+    .dark-theme .search-result-info {
+      color: #64b5f6;
+    }
+
+    .map-container {
+      flex: 1;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+    }
+
+    .map-controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 400;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      padding: 10px;
+    }
+
+    .map-controls button {
+      display: block;
+      width: 100%;
+      padding: 8px 12px;
+      margin: 5px 0;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .map-controls button:hover {
+      background: #0056b3;
+    }
+
+    .map-controls button.stop {
+      background: #dc3545;
+    }
+
+    .map-controls button.stop:hover {
+      background: #c82333;
+    }
+
+    .deliveries-panel {
+      width: 350px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      padding: 15px;
+      border-bottom: 2px solid #dee2e6;
+      background: #f8f9fa;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .deliveries-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .delivery-item {
+      padding: 15px;
+      border-bottom: 1px solid #dee2e6;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .delivery-item:hover {
+      background: #f0f0f0;
+    }
+
+    .delivery-item.active {
+      background: #e3f2fd;
+      border-left: 4px solid #007bff;
+      padding-left: 11px;
+    }
+
+    .delivery-header {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .delivery-status {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .delivery-status.pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .delivery-status.assigned {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .delivery-status.picked-up {
+      background: #cce5ff;
+      color: #004085;
+    }
+
+    .delivery-status.in-transit {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .delivery-status.arriving {
+      background: #ffeaa7;
+      color: #d97706;
+    }
+
+    .delivery-status.delivered {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .delivery-info {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .delivery-info label {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .no-deliveries {
+      padding: 30px 15px;
+      text-align: center;
+      color: #999;
+    }
+
+    .simulation-controls {
+      padding: 15px;
+      border-top: 2px solid #dee2e6;
+      background: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .simulation-controls button {
+      padding: 10px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .simulation-controls button:hover {
+      background: #218838;
+    }
+
+    .simulation-controls button.danger {
+      background: #dc3545;
+    }
+
+    .simulation-controls button.danger:hover {
+      background: #c82333;
+    }
+
+    .dark-theme .map-container,
+    .dark-theme .deliveries-panel {
+      background: #2d2d2d;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .dark-theme .delivery-item {
+      border-bottom-color: #444;
+      color: #e0e0e0;
+    }
+
+    .dark-theme .delivery-item:hover {
+      background: #3d3d3d;
+    }
+
+    .dark-theme .delivery-item.active {
+      background: #1a3a52;
+    }
+
+    .dark-theme .delivery-header {
+      color: #e0e0e0;
+    }
+
+    .dark-theme .delivery-info {
+      color: #aaa;
+    }
+
+    .dark-theme .delivery-info label {
+      color: #e0e0e0;
+    }
+
+    .dark-theme .map-controls {
+      background: #2d2d2d;
+    }
+
+    .dark-theme .panel-header,
+    .dark-theme .simulation-controls {
+      background: #3d3d3d;
+      border-bottom-color: #444;
+      border-top-color: #444;
+      color: #e0e0e0;
+    }
+
+    @media (max-width: 1200px) {
+      .tracking-container {
+        flex-direction: column;
+        height: auto;
+      }
+
+      .deliveries-panel {
+        width: 100%;
+        max-height: 400px;
+      }
+
+      .map-container {
+        height: 500px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="dashboard">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2 class="logo">LiveSupport</h2>
+    <nav class="menu">
+      <a href="./dashboard.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg><span class="nav-label">Inbox</span></a>
+                <a href="./tickets.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 7V4H4v3H2v10h18V7h-0zM6 6h12v2H6V6zm12 10H6v-6h12v6z"/></svg><span class="nav-label">Tickets</span></a>
+                <a href="./staff-performance.html" class=""><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 9h3v11H5zM10 4h3v16h-3zM15 13h3v7h-3z"/></svg><span class="nav-label">Staff Performance</span></a>
+                <a href="./analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 17h2V9H3v8zm4 0h2V3H7v14zm4 0h2v-6h-2v6zm4 0h2v-9h-2v9z"/></svg><span class="nav-label">Analytics</span></a>
+                <a href="./knowledge.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7v6c0 5 4 9 10 9s10-4 10-9V7l-10-5zM12 4.4L18.6 8 12 11.6 5.4 8 12 4.4z"/></svg><span class="nav-label">Knowledge Base</span></a>
+                <a href="./orders.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2zM7.16 14l.84-2h7.45l1.24 3H7.16zM7.6 6h10.8l-1.2 3H8.8L7.6 6z"/></svg><span class="nav-label">Orders</span></a>
+                <a href="./tracking.html" class="active"><svg  viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a4 4 0 100 8 4 4 0 000-8zm0-6c-6.6 0-12 5.4-12 12 0 3.6 1.6 6.8 4.2 9l.8-2.6C4.1 19.1 3 16.6 3 14 3 8.5 7.6 4 13 4s10 4.5 10 10c0 2.6-1.1 5.1-2.9 6.4L21 23c2.6-2.2 4-5.4 4-9 0-6.6-5.4-12-12-12z"/></svg><span class="nav-label">Tracking</span></a>
+                <a href="./instagram.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 2h10a5 5 0 015 5v10a5 5 0 01-5 5H7a5 5 0 01-5-5V7a5 5 0 015-5zm5 6a5 5 0 100 10 5 5 0 000-10zm4-3a1 1 0 110 2 1 1 0 010-2z"/></svg><span class="nav-label">Instagram</span></a>
+                <a href="./settings.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.14 12.94a7.89 7.89 0 000-1.88l2.03-1.58-2-3.46-2.39.96a8.1 8.1 0 00-1.6-.93l-.36-2.5h-4l-.36 2.5c-.57.24-1.1.55-1.6.93L6.8 6.02l-2 3.46L6.83 11a7.89 7.89 0 000 1.88l-2.03 1.58 2 3.46 2.39-.96c.5.38 1.03.69 1.6.93l.36 2.5h4l.36-2.5c.57-.24 1.1-.55 1.6-.93l2.39.96 2-3.46-2.03-1.58zM12 15.5A3.5 3.5 0 1112 8.5a3.5 3.5 0 010 7z"/></svg><span class="nav-label">Settings</span></a>
+    </nav>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="branch">
+        Branch: <strong>Ikeja Branch</strong>
+      </div>
+      <div class="top-right">
+        <span>Staff: <span id="staffName">Loading...</span></span>
+        <a href="/logout">
+          <button class="logout-btn">Logout</button>
+        </a>
+      </div>
+    </header>
+
+    <!-- NOTIFICATION BAR -->
+    <div id="notificationBar" class="notification-bar" style="display: none; background: #ff6b6b; color: white; padding: 10px; text-align: center; position: relative; z-index: 1000;">
+      <span id="notificationText">Notification</span>
+    </div>
+
+    <!-- TRACKING SECTION -->
+    <div class="tracking-container">
+      <div class="tracking-main">
+        <div class="tracking-header">
+          <h1>Delivery Tracking</h1>
+          <div class="search-bar">
+            <input type="text" id="orderSearchInput" placeholder="Enter Order ID..." onkeypress="handleSearchKeypress(event)">
+            <button onclick="searchOrderById()">🔍 Search</button>
+          </div>
+        </div>
+
+        <div class="search-result" id="searchResult">
+          <div class="search-result-header">Order Found</div>
+          <div class="search-result-info" id="searchResultInfo"></div>
+        </div>
+
+        <div class="map-container">
+          <div id="map"></div>
+          <div class="map-controls">
+            <button onclick="centerMapOnDelivery()">📍 Center</button>
+            <button onclick="zoomToFitDeliveries()">🔍 Fit All</button>
+            <button class="stop" onclick="clearAllMarkers()">🗑️ Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DELIVERIES PANEL -->
+      <div class="deliveries-panel">
+        <div class="panel-header">Active Deliveries</div>
+        <div class="deliveries-list" id="deliveriesList">
+          <div class="no-deliveries">No active deliveries</div>
+        </div>
+        <div class="simulation-controls">
+          <button onclick="startSimulation()">▶️ Track Order</button>
+          <button class="danger" onclick="stopAllSimulations()">⏹️ Stop All</button>
+          <button onclick="generateTestDelivery()">+ Add Test Delivery</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<!-- Tracking App -->
+<script src="./js/tracking.js"></script>
+
+<!-- Staff name loader -->
+<script>
+  function loadStaffName() {
+    const staffName = localStorage.getItem('staffName');
+    if (staffName) {
+      document.getElementById('staffName').textContent = staffName;
+    }
+  }
+
+  window.addEventListener('load', loadStaffName);
+</script>
+
+<script>
+// Load staff name (same as tickets page)
+fetch("/api/user")
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("staffName").textContent = data.role;
+  })
+  .catch(err => console.log("User fetch error", err));
+</script>
+
+</body>
+</html>

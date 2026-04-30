@@ -63,19 +63,27 @@ button:hover{
     background:#2455b6;
 }
 
+#errorBox {
+    display: none;
+    background: #ffebee;
+    color: #c62828;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #ef5350;
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: fit-content;
+    text-align: center;
+    font-weight: bold;
+    z-index: 1000;
+}
+
 </style>
 
 </head>
 
-<script>
-const params = new URLSearchParams(window.location.search);
-
-if (params.get("error") === "invalid") {
-  const box = document.getElementById("errorBox");
-  box.innerText = "❌ Invalid email or password";
-  box.style.display = "block";
-}
-</script>
 <body>
 
 <div class="login-box">
@@ -90,11 +98,23 @@ if (params.get("error") === "invalid") {
 
 <button type="submit">Login</button>
 
-<div id="errorBox" class="hidden"></div>
+<div id="errorBox"></div>
 
 </form>
 
 </div>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const errorBox = document.getElementById("errorBox");
+
+    if (params.get("error") === "invalid") {
+        errorBox.innerHTML = "<marquee>🚫 Staff not recognized. Please check your credentials.</marquee>";
+        errorBox.style.display = "block";
+    }
+});
+</script>
 
 
 
