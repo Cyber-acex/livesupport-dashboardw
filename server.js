@@ -26,6 +26,8 @@ const escalationTimers = new Map();
 // Track presence and typing
 const onlineAgents = new Map(); // socketId -> { userId, name, role, socketId, lastActive, activeConversation }
 const typingIndicators = new Map(); // conversationId -> Set of agent names
+// Track user sessions to support force-logout
+const userSessions = new Map(); // userId -> Set of sessionIDs
 
 // Disable AI responses for 15 minutes after agent sends a message or after an AI handoff
 function disableAIForConversation(conversationId, source = 'agent') {
@@ -235,6 +237,13 @@ db.query(`
     )
 `, (err) => {
     if (err) console.log("Error creating delivery_issues table:", err);
+});
+
+// Ensure users table has a disabled column (some installations may omit it)
+db.query("ALTER TABLE users ADD COLUMN disabled TINYINT(1) DEFAULT 0", (err) => {
+    if (err && err.errno !== 1060) {
+        console.log("Error adding disabled to users:", err);
+    }
 });
 
 db.query("ALTER TABLE delivery_issues ADD INDEX idx_delivery_issues_conversation_id (conversation_id)", (err) => {
@@ -483,6 +492,15 @@ app.use((req, res, next) => {
     next();
 });
 
+// Protect admin assets/pages before static middleware: require login + admin role
+app.use((req, res, next) => {
+    if (req.path === '/admin-users.html' || req.path.startsWith('/js/admin-users')) {
+        if (!req.session || !req.session.user) return res.redirect('/login.html');
+        if (req.session.user.role !== 'admin') return res.status(403).send('Forbidden');
+    }
+    next();
+});
+
 app.use(express.static("public"));
 
 if (!fs.existsSync(path.join(__dirname, "uploads"))) {
@@ -516,8 +534,19 @@ app.post("/login", (req, res) => {
         console.log("DB result:", result);
         if (err) throw err;
         if (result.length > 0) {
-            req.session.user = result[0];
-            req.session.userId = result[0].id;
+                req.session.user = result[0];
+                req.session.userId = result[0].id;
+                // Track this session id for the logged-in user to allow force-logout
+                try {
+                    const sid = req.sessionID;
+                    const uid = String(result[0].id);
+                    const set = userSessions.get(uid) || new Set();
+                    set.add(sid);
+                    userSessions.set(uid, set);
+                    try { io.emit('admin:users:changed', { action: 'login', id: uid }); } catch (e) { console.error('Emit admin users changed error', e); }
+                } catch (e) {
+                    console.error('Failed to track user session', e);
+                }
             res.redirect("/dashboard");
         } else {
             res.redirect("/login.html?error=invalid");
@@ -530,7 +559,16 @@ app.get("/dashboard", isAuthenticated, (req, res) => {
 });
 
 app.get("/logout", (req, res) => {
-    req.session.destroy();
+    try {
+        const uid = req.session && req.session.userId ? String(req.session.userId) : null;
+        if (uid && userSessions.has(uid)) {
+            const set = userSessions.get(uid);
+            set.delete(req.sessionID);
+            if (set.size === 0) userSessions.delete(uid);
+            else userSessions.set(uid, set);
+        }
+    } catch (e) { console.error('Error cleaning userSessions on logout', e); }
+    try { const uid = req.session && req.session.userId ? String(req.session.userId) : null; req.session.destroy(() => { try { if (uid) io.emit('admin:users:changed', { action: 'logout', id: uid }); } catch (e) {} }); } catch (e) { req.session.destroy(); }
     res.redirect("/login.html");
 });
 
@@ -544,6 +582,115 @@ app.get("/api/user", (req, res) => {
         name: req.session.user.name,
         role: req.session.user.role
     });
+});
+
+// Admin middleware
+function isAdmin(req, res, next) {
+    if (req.session && req.session.user && req.session.user.role === 'admin') return next();
+    return res.status(403).json({ error: 'admin_required' });
+}
+
+// ---------------------------
+// Admin: User management APIs
+// ---------------------------
+app.get('/api/admin/users', isAuthenticated, isAdmin, (req, res) => {
+    db.query('SELECT id, name, email, role, disabled FROM users', (err, rows) => {
+        if (err) return res.status(500).json({ error: 'db_error' });
+        try {
+            const augmented = rows.map(r => {
+                const uid = String(r.id);
+                const sessions = userSessions.get(uid);
+                // check onlineAgents map for any socket with this userId
+                let online = false;
+                for (const a of onlineAgents.values()) {
+                    if (String(a.userId) === uid) { online = true; break; }
+                }
+                return Object.assign({}, r, { active: !!(sessions && sessions.size > 0) || online });
+            });
+            res.json(augmented);
+        } catch (e) {
+            console.error('augment admin users error', e);
+            res.json(rows);
+        }
+    });
+});
+
+app.post('/api/admin/users', isAuthenticated, isAdmin, (req, res) => {
+    const { name, email, password, role } = req.body;
+    console.log('POST /api/admin/users body=', req.body);
+    if (!email || !password) return res.status(400).json({ error: 'email_and_password_required' });
+    const sql = 'INSERT INTO users (name, email, password, role, disabled) VALUES (?, ?, ?, ?, 0)';
+    db.query(sql, [name || email.split('@')[0], email, password, role || 'agent'], (err, result) => {
+        if (err) {
+            console.error('Failed to insert user:', err);
+            // return helpful error for client
+            const payload = { error: 'db_error', code: err.code || null, message: err.sqlMessage || String(err) };
+            return res.status(500).json(payload);
+        }
+        console.log('User created id=', result.insertId);
+        try { io.emit('admin:users:changed', { action: 'create', id: result.insertId, email }); } catch (e) { console.error('Emit admin users changed error', e); }
+        res.json({ success: true, id: result.insertId });
+    });
+});
+
+app.put('/api/admin/users/:id', isAuthenticated, isAdmin, (req, res) => {
+    const id = req.params.id;
+    const { name, role, disabled } = req.body;
+    const sql = 'UPDATE users SET name = COALESCE(?, name), role = COALESCE(?, role), disabled = COALESCE(?, disabled) WHERE id = ?';
+    db.query(sql, [name, role, (disabled ? 1 : 0), id], (err) => {
+        if (err) return res.status(500).json({ error: 'db_error' });
+        try { io.emit('admin:users:changed', { action: 'update', id }); } catch (e) { console.error('Emit admin users changed error', e); }
+        res.json({ success: true });
+    });
+});
+
+app.delete('/api/admin/users/:id', isAuthenticated, isAdmin, (req, res) => {
+    const id = req.params.id;
+    db.query('DELETE FROM users WHERE id = ?', [id], (err) => {
+        if (err) return res.status(500).json({ error: 'db_error' });
+        // destroy tracked sessions
+        try {
+            const set = userSessions.get(String(id));
+            if (set) {
+                set.forEach(sid => {
+                    // destroy session by id if possible
+                    try { req.sessionStore.destroy(sid, () => {}); } catch (e) {}
+                });
+                userSessions.delete(String(id));
+            }
+        } catch (e) {}
+        res.json({ success: true });
+        try { io.emit('admin:users:changed', { action: 'delete', id }); } catch (e) { console.error('Emit admin users changed error', e); }
+    });
+});
+
+app.post('/api/admin/users/:id/reset-password', isAuthenticated, isAdmin, (req, res) => {
+    const id = req.params.id;
+    const newPass = Math.random().toString(36).slice(-8);
+    db.query('UPDATE users SET password = ? WHERE id = ?', [newPass, id], (err) => {
+        if (err) return res.status(500).json({ error: 'db_error' });
+        // Optionally email the password; here we just return it so admin can communicate it
+        try { io.emit('admin:users:changed', { action: 'reset-password', id }); } catch (e) { console.error('Emit admin users changed error', e); }
+        res.json({ success: true, password: newPass });
+    });
+});
+
+app.post('/api/admin/users/:id/force-logout', isAuthenticated, isAdmin, (req, res) => {
+    const id = req.params.id;
+    try {
+        const set = userSessions.get(String(id));
+        if (set) {
+            set.forEach(sid => {
+                try { req.sessionStore.destroy(sid, () => {}); } catch (e) { console.error('destroy session error', e); }
+            });
+            userSessions.delete(String(id));
+        }
+    } catch (e) {
+        console.error('force-logout error', e);
+        return res.status(500).json({ error: 'internal' });
+    }
+    try { io.emit('admin:users:changed', { action: 'force-logout', id }); } catch (e) { console.error('Emit admin users changed error', e); }
+    res.json({ success: true });
 });
 
 // ---------------------------

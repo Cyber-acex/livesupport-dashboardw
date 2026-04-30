@@ -235,6 +235,29 @@ input:checked + .slider {
     animation: pulseAccent 2.5s ease-in-out infinite;
 }
   </style>
+  <style>
+    /* Make the users list scrollable within the admin panel */
+    #adminUsers #usersList {
+      max-height: calc(100vh - 420px);
+      overflow-y: auto;
+      padding-right: 12px; /* avoid content being hidden under scrollbar */
+    }
+
+    /* Improve table layout when scrolling */
+    #adminUsers table { width: 100%; border-collapse: collapse; }
+    #adminUsers table tr td, #adminUsers table tr th { padding: 12px 8px; vertical-align: middle; }
+    
+    /* Sticky header */
+    #adminUsers #usersList table tr:first-child th {
+      position: sticky;
+      top: 0;
+      z-index: 6;
+      background: linear-gradient(180deg, rgba(15,23,42,0.96), rgba(17,24,39,0.96));
+      color: #e6eef9;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 6px 18px rgba(2,6,23,0.45);
+    }
+  </style>
   <script>
     // Apply theme from localStorage immediately to prevent flash
     (function applyThemeImmediately() {
@@ -255,6 +278,10 @@ input:checked + .slider {
       }
     })();
   </script>
+
+  <!-- include admin users JS (protected by server middleware) -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="./js/admin-users.js"></script>
   <style>
     .settings-container { display: flex; }
     .settings-sidebar { width: 220px; background: #2c3e50; color: white; padding: 20px; }
@@ -363,6 +390,7 @@ input:checked + .slider {
         <button onclick="showSection('chat')">Chat Settings</button>
         <button onclick="showSection('tickets')">Ticket Settings</button>
         <button onclick="showSection('appearance')">Appearance</button>
+        <button id="adminUsersBtn" style="display:none; margin-top:12px; background: #7c3aed;">Admin: User Management</button>
       </div>
 
       <div class="settings-content">
@@ -442,6 +470,19 @@ input:checked + .slider {
           </select>
           <button onclick="saveSettings()">Save Changes</button>
         </div>
+        <!-- ADMIN USERS -->
+        <div id="adminUsers" class="settings-section">
+          <h2>Admin — User Management</h2>
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+            <input id="newName" placeholder="Name" style="padding:8px; border-radius:8px; border:1px solid #ddd;" />
+            <input id="newEmail" placeholder="Email" style="padding:8px; border-radius:8px; border:1px solid #ddd;" />
+            <input id="newPass" placeholder="Password" style="padding:8px; border-radius:8px; border:1px solid #ddd;" />
+            <select id="newRole" style="padding:8px; border-radius:8px; border:1px solid #ddd;"><option value="agent">agent</option><option value="admin">admin</option></select>
+            <button id="createBtn" style="padding:8px 12px; border-radius:8px; background:#2563eb; color:#fff; border:none;">Create</button>
+            <div id="createMsg" style="margin-left:8px; color:#065f46; font-weight:600; display:none;"></div>
+          </div>
+          <div id="usersList">Loading users...</div>
+        </div>
       </div>
     </div>
   </div>
@@ -452,6 +493,8 @@ input:checked + .slider {
   function showSection(id) {
     document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
+    // If admin users section shown, fetch users (function provided by admin-users.js)
+    try { if (id === 'adminUsers' && typeof fetchUsers === 'function') fetchUsers(); } catch (e) {}
   }
 
   // Apply theme with full color inversion
@@ -601,7 +644,18 @@ input:checked + .slider {
     .then(data => {
       // show the user-friendly display name from settings, fallback to role or name
       const name = data.displayName || data.name || data.role || 'Staff';
-      document.getElementById("staffName").textContent = name;
+      const sn = document.getElementById("staffName"); if (sn) sn.textContent = name;
+      // Show admin link only for admins
+      try {
+        if (data && data.role === 'admin') {
+          const btn = document.getElementById('adminUsersBtn');
+          if (btn) {
+            btn.style.display = 'block';
+            btn.addEventListener('click', () => { showSection('adminUsers'); });
+          }
+          const usersBtn = document.getElementById('usersBtn'); if (usersBtn) usersBtn.style.display='inline-block';
+        }
+      } catch (e) { console.error('admin button wiring error', e); }
     })
     .catch(err => console.log("User fetch error", err));
 
