@@ -279,6 +279,18 @@ input:checked + .slider {
     })();
   </script>
 
+  <!-- runtime config loader: reads public/config.json and exposes window.BACKEND_URL -->
+  <script>
+    (function(){
+      try {
+        fetch('/config.json').then(r=>r.json()).then(cfg=>{
+          window.BACKEND_URL = (cfg && cfg.BACKEND_URL) ? String(cfg.BACKEND_URL) : '';
+          // normalize empty to empty string
+          if (!window.BACKEND_URL) window.BACKEND_URL = '';
+        }).catch(()=>{ window.BACKEND_URL = ''; });
+      } catch (e) { window.BACKEND_URL = ''; }
+    })();
+  </script>
   <!-- include admin users JS (protected by server middleware) -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="./js/admin-users.js"></script>

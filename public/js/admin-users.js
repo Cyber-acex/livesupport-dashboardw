@@ -1,5 +1,6 @@
 async function fetchUsers() {
-  const res = await fetch('/api/admin/users');
+  const _base = (typeof window !== 'undefined' && window.BACKEND_URL) ? String(window.BACKEND_URL).replace(/\/$/, '') : '';
+  const res = await fetch(_base + '/api/admin/users');
   if (res.status === 401) return location.href = '/login.html';
   if (res.status === 403) return document.body.innerHTML = '<h2>Access denied</h2>';
   let payload;
@@ -35,27 +36,27 @@ function renderUsers(users) {
     saveBtn.onclick = async () => {
       const role = tr.querySelector('.roleSel').value;
       const disabled = tr.querySelector('.disabledChk').checked ? 1 : 0;
-      await fetch('/api/admin/users/' + u.id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ role, disabled }) });
+      await fetch(_base + '/api/admin/users/' + u.id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ role, disabled }) });
       fetchUsers();
     };
 
     const resetBtn = document.createElement('button'); resetBtn.textContent = 'Reset PW';
     resetBtn.onclick = async () => {
-      const r = await fetch('/api/admin/users/' + u.id + '/reset-password', { method: 'POST' });
+      const r = await fetch(_base + '/api/admin/users/' + u.id + '/reset-password', { method: 'POST' });
       const data = await r.json();
       if (data && data.password) alert('New password: ' + data.password);
     };
 
     const logoutBtn = document.createElement('button'); logoutBtn.textContent = 'Force Logout';
     logoutBtn.onclick = async () => {
-      await fetch('/api/admin/users/' + u.id + '/force-logout', { method: 'POST' });
+      await fetch(_base + '/api/admin/users/' + u.id + '/force-logout', { method: 'POST' });
       alert('Force logout requested');
     };
 
     const delBtn = document.createElement('button'); delBtn.textContent = 'Delete';
     delBtn.onclick = async () => {
       if (!confirm('Delete user ' + u.name + '?')) return;
-      await fetch('/api/admin/users/' + u.id, { method: 'DELETE' });
+      await fetch(_base + '/api/admin/users/' + u.id, { method: 'DELETE' });
       fetchUsers();
     };
 
@@ -129,7 +130,8 @@ window.addEventListener('DOMContentLoaded', () => {
   // Setup Socket.IO to refresh list when users change or presence updates
   try {
     if (typeof io !== 'undefined') {
-      const socket = io();
+      const _base = (typeof window !== 'undefined' && window.BACKEND_URL) ? String(window.BACKEND_URL).replace(/\/$/, '') : '';
+      const socket = _base ? io(_base) : io();
       socket.on('admin:users:changed', (info) => {
         console.log('admin:users:changed', info || '');
         try { fetchUsers(); } catch (e) {}
