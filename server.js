@@ -530,21 +530,14 @@ app.post("/login", (req, res) => {
     const { email, password } = req.body;
     console.log("Login attempt:", email, password);
     const sql = "SELECT * FROM users WHERE email = ? AND password = ?";
-    // Acquire a connection from the pool for better error visibility
-    db.getConnection((getErr, connection) => {
-        if (getErr) {
-            console.error('DB getConnection error during login:', getErr);
+    // Use pool.query which handles connection acquisition/release internally
+    db.query(sql, [email, password], (err, result) => {
+        console.log("DB result:", result);
+        if (err) {
+            console.error('Login DB error:', err);
             return res.status(500).send('Internal Server Error');
         }
-        connection.query(sql, [email, password], (err, result) => {
-            console.log("DB result:", result);
-            // release connection back to pool
-            try { connection.release(); } catch (e) {}
-            if (err) {
-                console.error('Login DB error:', err);
-                return res.status(500).send('Internal Server Error');
-            }
-            if (result && result.length > 0) {
+        if (result && result.length > 0) {
                 req.session.user = result[0];
                 req.session.userId = result[0].id;
                 // Track this session id for the logged-in user to allow force-logout
@@ -585,19 +578,12 @@ app.get("/logout", (req, res) => {
 
 // Health check route to verify DB connectivity
 app.get('/health', (req, res) => {
-    db.getConnection((err, connection) => {
-        if (err) {
-            console.error('Health check DB connection error:', err);
-            return res.status(500).json({ status: 'error', error: err.message });
+    db.query('SELECT 1 AS ok', (qErr, rows) => {
+        if (qErr) {
+            console.error('Health check query error:', qErr);
+            return res.status(500).json({ status: 'error', error: qErr.message });
         }
-        connection.query('SELECT 1 AS ok', (qErr, rows) => {
-            try { connection.release(); } catch (e) {}
-            if (qErr) {
-                console.error('Health check query error:', qErr);
-                return res.status(500).json({ status: 'error', error: qErr.message });
-            }
-            res.json({ status: 'ok', rows });
-        });
+        res.json({ status: 'ok', rows });
     });
 });
 
