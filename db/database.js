@@ -6,31 +6,41 @@ let config = {
     user: process.env.DB_USER || "root",
     password: process.env.DB_PASSWORD || "",
     database: process.env.DB_NAME || "livesupport",
-    port: process.env.DB_PORT || 3306
+    port: process.env.DB_PORT || 3306,
+    waitForConnections: true,
+    connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT || '10', 10),
+    queueLimit: 0
 };
 
 if (process.env.DATABASE_URL) {
     const dbUrl = url.parse(process.env.DATABASE_URL);
+    const auth = (dbUrl.auth || '').split(':');
     config = {
         host: dbUrl.hostname,
-        user: dbUrl.auth.split(':')[0],
-        password: dbUrl.auth.split(':')[1],
-        database: dbUrl.pathname.slice(1), // remove leading /
-        port: dbUrl.port || 3306
+        user: auth[0] || config.user,
+        password: auth[1] || config.password,
+        database: (dbUrl.pathname || '').slice(1) || config.database,
+        port: dbUrl.port || config.port,
+        waitForConnections: true,
+        connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT || '10', 10),
+        queueLimit: 0
     };
 }
 
-const db = mysql.createConnection(config);
+// Use a pool so connections are managed and re-used across requests
+const db = mysql.createPool(config);
 
 function connectDatabase(callback) {
-    db.connect(err => {
+    // Test acquiring a connection from the pool
+    db.getConnection((err, connection) => {
+        if (connection) connection.release();
         if (err) {
-            console.error("Database error:", err);
-            callback(err);
+            console.error('Database connection error:', err);
+            if (callback) return callback(err);
             return;
         }
-        console.log("MySQL connected");
-        callback();
+        console.log('MySQL pool is ready');
+        if (callback) callback();
     });
 }
 

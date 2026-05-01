@@ -530,10 +530,21 @@ app.post("/login", (req, res) => {
     const { email, password } = req.body;
     console.log("Login attempt:", email, password);
     const sql = "SELECT * FROM users WHERE email = ? AND password = ?";
-    db.query(sql, [email, password], (err, result) => {
-        console.log("DB result:", result);
-        if (err) throw err;
-        if (result.length > 0) {
+    // Acquire a connection from the pool for better error visibility
+    db.getConnection((getErr, connection) => {
+        if (getErr) {
+            console.error('DB getConnection error during login:', getErr);
+            return res.status(500).send('Internal Server Error');
+        }
+        connection.query(sql, [email, password], (err, result) => {
+            console.log("DB result:", result);
+            // release connection back to pool
+            try { connection.release(); } catch (e) {}
+            if (err) {
+                console.error('Login DB error:', err);
+                return res.status(500).send('Internal Server Error');
+            }
+            if (result && result.length > 0) {
                 req.session.user = result[0];
                 req.session.userId = result[0].id;
                 // Track this session id for the logged-in user to allow force-logout
@@ -570,6 +581,24 @@ app.get("/logout", (req, res) => {
     } catch (e) { console.error('Error cleaning userSessions on logout', e); }
     try { const uid = req.session && req.session.userId ? String(req.session.userId) : null; req.session.destroy(() => { try { if (uid) io.emit('admin:users:changed', { action: 'logout', id: uid }); } catch (e) {} }); } catch (e) { req.session.destroy(); }
     res.redirect("/login.html");
+});
+
+// Health check route to verify DB connectivity
+app.get('/health', (req, res) => {
+    db.getConnection((err, connection) => {
+        if (err) {
+            console.error('Health check DB connection error:', err);
+            return res.status(500).json({ status: 'error', error: err.message });
+        }
+        connection.query('SELECT 1 AS ok', (qErr, rows) => {
+            try { connection.release(); } catch (e) {}
+            if (qErr) {
+                console.error('Health check query error:', qErr);
+                return res.status(500).json({ status: 'error', error: qErr.message });
+            }
+            res.json({ status: 'ok', rows });
+        });
+    });
 });
 
 // ---------------------------
