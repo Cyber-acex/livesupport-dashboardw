@@ -9,7 +9,7 @@ const session = require("express-session");
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
-const { db } = require("./db/database");
+const { db, connectDatabase } = require("./db/database");
 const { getMistralReply, initDatabase, setDisableAICallback, setHandoffCallback, isTicketCreationRequest, isRequestingStaff } = require("./replies");
 const app = express();
 
@@ -3041,51 +3041,31 @@ db.query(`
     }
 });
 httpServer.listen(PORT, () => {
-    console.log(`✅🎲Server running on port ${PORT}🎲`);
-});
-
-// ---------------------------
-// Translation API
-// ---------------------------
-app.post('/api/translate', async (req, res) => {
+    // Print non-sensitive DB info for debugging (do NOT log passwords)
     try {
-        const { text, target } = req.body;
-        if (!text) return res.status(400).json({ error: 'Missing text to translate' });
-        const tgt = (target || 'en').toString();
-
-        // Prefer configured provider via env, otherwise use LibreTranslate public instance
-        if (process.env.TRANSLATE_PROVIDER === 'google' && process.env.GOOGLE_API_KEY) {
-            // Google Translate v2 simple request
-            const apiKey = process.env.GOOGLE_API_KEY;
-            const url = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
-            const resp = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ q: text, target: tgt, format: 'text' })
+        let dbHost = process.env.DB_HOST || null;
+        let dbPort = process.env.DB_PORT || null;
+        let dbName = process.env.DB_NAME || null;
+        if (process.env.DATABASE_URL) {
+            try {
+                const parsed = new URL(process.env.DATABASE_URL);
+                dbHost = parsed.hostname;
+                dbPort = parsed.port || dbPort;
+                dbName = parsed.pathname ? parsed.pathname.replace(/^\//, '') : dbName;
+            } catch (e) {
+                // ignore parse errors
+            }
+        }
+        console.log(`✅🎲Server running on port ${PORT}🎲`);
+        console.log(`DB host: ${dbHost || 'unknown'}, port: ${dbPort || 'unknown'}, database: ${dbName || 'unknown'}`);
+        if (connectDatabase) {
+            connectDatabase((err) => {
+                if (err) console.error('DB connection test failed at startup:', err.message || err);
+                else console.log('DB connection test succeeded');
             });
-            const data = await resp.json();
-            const translated = data?.data?.translations?.[0]?.translatedText || null;
-            return res.json({ translatedText: translated });
         }
-
-        // Fallback to LibreTranslate
-        const libreUrl = process.env.LIBRETRANSLATE_URL || 'https://libretranslate.com/translate';
-        const headers = { 'Content-Type': 'application/json' };
-        if (process.env.LIBRETRANSLATE_API_KEY) headers['Authorization'] = `Bearer ${process.env.LIBRETRANSLATE_API_KEY}`;
-
-        const r = await fetch(libreUrl, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ q: text, source: 'auto', target: tgt, format: 'text' })
-        });
-        const json = await r.json();
-        const translated = json?.translatedText || json?.translated_text || null;
-        if (!translated) {
-            return res.status(500).json({ error: 'Translation provider error', raw: json });
-        }
-        res.json({ translatedText: translated });
-    } catch (err) {
-        console.error('Translation error:', err);
-        res.status(500).json({ error: 'Translation failed' });
+    } catch (e) {
+        console.log(`✅🎲Server running on port ${PORT}🎲`);
     }
 });
+
