@@ -3040,6 +3040,15 @@ db.query(`
         console.log('Deliveries table ready');
     }
 });
+httpServer.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use. Stop the process using it or set a different PORT environment variable.`);
+        process.exit(1);
+    }
+    console.error('HTTP server error:', err);
+    process.exit(1);
+});
+
 httpServer.listen(PORT, () => {
     // Print non-sensitive DB info for debugging (do NOT log passwords)
     try {
