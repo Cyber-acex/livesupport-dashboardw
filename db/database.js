@@ -10,7 +10,13 @@ const config = {
     port: process.env.DB_PORT || 3306,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelayMs: 0,
+    enableStreamingResults: false,
+    connectionTimeoutMillis: 30000,
+    idleTimeoutMillis: 30000,
+    ssl: process.env.DB_SSL === 'true' ? true : false
 };
 
 // Use a pool so connections are managed and re-used across requests
