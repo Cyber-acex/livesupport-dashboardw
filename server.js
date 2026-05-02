@@ -9,7 +9,7 @@ const session = require("express-session");
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
-const { db, connectDatabase } = require("./db/database");
+const { db, connectDatabase, config: dbConfig } = require("./db/database");
 const { getMistralReply, initDatabase, setDisableAICallback, setHandoffCallback, isTicketCreationRequest, isRequestingStaff } = require("./replies");
 const app = express();
 
@@ -3050,27 +3050,25 @@ httpServer.on('error', (err) => {
 });
 
 httpServer.listen(PORT, () => {
-    // Print non-sensitive DB info for debugging (do NOT log passwords)
-    try {
-        let dbHost = process.env.DB_HOST || null;
-        let dbPort = process.env.DB_PORT || null;
-        let dbName = process.env.DB_NAME || null;
-        if (process.env.DATABASE_URL) {
-            try {
-                const parsed = new URL(process.env.DATABASE_URL);
-                dbHost = parsed.hostname;
-                dbPort = parsed.port || dbPort;
-                dbName = parsed.pathname ? parsed.pathname.replace(/^\//, '') : dbName;
-            } catch (e) {
-                // ignore parse errors
-            }
-        }
-        console.log(`✅🎲Server running on port ${PORT}🎲`);
-        console.log(`DB host: ${dbHost || 'unknown'}, port: ${dbPort || 'unknown'}, database: ${dbName || 'unknown'}`);
+        // Print non-sensitive DB info for debugging (do NOT log passwords)
+        try {
+            const dbHost = (dbConfig && dbConfig.host) || process.env.DB_HOST || 'unknown';
+            const dbPort = (dbConfig && dbConfig.port) || process.env.DB_PORT || 'unknown';
+            const dbName = (dbConfig && dbConfig.database) || process.env.DB_NAME || 'unknown';
+            console.log(`✅🎲Server running on port ${PORT}🎲`);
+            console.log(`DB host: ${dbHost}, port: ${dbPort}, database: ${dbName}`);
         if (connectDatabase) {
             connectDatabase((err) => {
-                if (err) console.error('DB connection test failed at startup:', err.message || err);
-                else console.log('DB connection test succeeded');
+                if (err) {
+                    // Sanitize DB errors to avoid printing SQL internals or password-related details
+                    if (err && err.code === 'ER_ACCESS_DENIED_ERROR') {
+                        console.error('DB connection test failed at startup: access denied (check DB_USER/DB_PASSWORD/DB_HOST)');
+                    } else {
+                        // Print limited, non-sensitive fields for other errors
+                        const safe = { code: err.code || 'UNKNOWN', errno: err.errno || null, message: err.message || 'DB error' };
+                        console.error('DB connection test failed at startup:', safe);
+                    }
+                } else console.log('DB connection test succeeded');
             });
         }
     } catch (e) {
