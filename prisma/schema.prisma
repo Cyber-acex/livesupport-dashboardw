@@ -1,0 +1,344 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Conversation {
+  id          Int      @id @default(autoincrement())
+  phone       String?  @db.VarChar(255)
+  name        String?  @db.VarChar(255)
+  platform    String?  @default("whatsapp") @db.VarChar(50)
+  created_at  DateTime @default(now()) @db.Timestamp(0)
+
+  // Relations
+  messages         Message[]
+  replies          Reply[]
+  aiMessages       AiMessage[]
+  staffMessages    StaffMessage[]
+  aiReplies        AiReply[]
+  staffReplies     StaffReply[]
+  resolved         Resolved?
+  escalations      Escalation?
+  refunds          Refund[]
+  aiFeedback       AiFeedback[]
+  deliveryIssues   DeliveryIssue[]
+  orders           Order[]
+  instagramConversation InstagramConversation?
+
+  @@map("conversations")
+}
+
+model Message {
+  id               Int       @id @default(autoincrement())
+  conversation_id  Int
+  sender           String    @db.VarChar(50)
+  message          String?   @db.Text
+  created_at       DateTime  @default(now()) @db.Timestamp(0)
+
+  // Relations
+  conversation     Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Reply {
+  id               Int       @id @default(autoincrement())
+  conversation_id  Int
+  sender           String    @db.VarChar(50)
+  message          String?   @db.Text
+  user_id          Int?
+  created_at       DateTime  @default(now()) @db.Timestamp(0)
+
+  // Relations
+  conversation     Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@map("replies")
+}
+
+model AiMessage {
+  id               Int       @id @default(autoincrement())
+  conversation_id  Int
+  sender           String    @db.VarChar(255)
+  message          String?   @db.Text
+  user_id          Int?
+  created_at       DateTime  @default(now()) @db.Timestamp(0)
+
+  // Relations
+  conversation     Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@map("ai_messages")
+}
+
+model StaffMessage {
+  id               Int       @id @default(autoincrement())
+  conversation_id  Int
+  sender           String    @db.VarChar(255)
+  message          String?   @db.Text
+  user_id          Int?
+  created_at       DateTime  @default(now()) @db.Timestamp(0)
+
+  // Relations
+  conversation     Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@map("staff_messages")
+}
+
+model AiReply {
+  id               Int       @id @default(autoincrement())
+  conversation_id  Int
+  sender           String    @db.VarChar(255)
+  message          String?   @db.Text
+  user_id          Int?
+  created_at       DateTime  @default(now()) @db.Timestamp(0)
+
+  // Relations
+  conversation     Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@map("ai replies")
+}
+
+model StaffReply {
+  id               Int       @id @default(autoincrement())
+  conversation_id  Int
+  sender           String    @db.VarChar(255)
+  message          String?   @db.Text
+  user_id          Int?
+  created_at       DateTime  @default(now()) @db.Timestamp(0)
+
+  // Relations
+  conversation     Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@map("staff replies")
+}
+
+model Resolved {
+  id               Int       @id @default(autoincrement())
+  conversation_id  Int       @unique
+  resolved_at      DateTime  @default(now()) @db.Timestamp(0)
+
+  // Relations
+  conversation     Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@map("resolved")
+}
+
+model Escalation {
+  id               Int       @id @default(autoincrement())
+  conversation_id  Int       @unique
+  customer_name    String?   @db.VarChar(255)
+  escalated_at     DateTime  @default(now()) @db.Timestamp(0)
+  claimed_by       String?   @db.VarChar(255)
+  claim_time       DateTime? @db.Timestamp(0)
+  snoozed_until    DateTime? @db.Timestamp(0)
+  alarm_active     Boolean?  @default(true)
+
+  // Relations
+  conversation     Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@map("escalations")
+}
+
+model Refund {
+  id               Int       @id @default(autoincrement())
+  conversation_id  Int
+  customer_name    String?   @db.VarChar(255)
+  refunded_at      DateTime  @default(now()) @db.Timestamp(0)
+
+  // Relations
+  conversation     Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@map("refunds")
+  @@index([conversation_id])
+}
+
+model AiFeedback {
+  id               Int       @id @default(autoincrement())
+  conversation_id  Int?
+  message_id       Int?
+  user_id          Int?
+  rating           Int?
+  feedback_text    String?   @db.Text
+  correction       String?   @db.Text
+  created_at       DateTime  @default(now()) @db.Timestamp(0)
+
+  // Relations
+  conversation     Conversation? @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@map("ai_feedback")
+  @@index([conversation_id])
+  @@index([user_id])
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique @db.VarChar(255)
+  password    String   @db.VarChar(255)
+  name        String   @db.VarChar(255)
+  role        String?  @default("agent") @db.VarChar(50)
+  disabled    Boolean? @default(false)
+  created_at  DateTime @default(now()) @db.Timestamp(0)
+
+  // Relations
+  settings    Setting?
+
+  @@map("users")
+}
+
+model Setting {
+  id            Int     @id @default(autoincrement())
+  user_id       Int     @unique
+  displayName   String? @db.VarChar(255)
+  email         String? @db.VarChar(255)
+  password      String? @db.VarChar(255)
+  autoReply     String? @db.VarChar(255)
+  chatEnabled   String? @db.VarChar(10)
+  msgAlert      Boolean?
+  ticketAlert   Boolean?
+  soundAlert    Boolean?
+  priority      String? @db.VarChar(20)
+  autoAssign    String? @db.VarChar(10)
+  theme         String? @db.VarChar(20)
+
+  // Relations
+  user          User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("settings")
+}
+
+model DeliveryIssue {
+  id               Int       @id @default(autoincrement())
+  conversation_id  Int
+  customer_name    String?   @db.VarChar(255)
+  reported_at      DateTime  @default(now()) @db.Timestamp(0)
+
+  // Relations
+  conversation     Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@map("delivery_issues")
+  @@index([conversation_id])
+}
+
+model WhatsappToken {
+  id          Int       @id @default(autoincrement())
+  token       String?   @db.Text
+  expires_at  DateTime?
+  created_at  DateTime  @default(now()) @db.Timestamp(0)
+
+  @@map("whatsapp_tokens")
+}
+
+model InstagramToken {
+  id          Int       @id @default(autoincrement())
+  token       String?   @db.Text
+  expires_at  DateTime?
+  created_at  DateTime  @default(now()) @db.Timestamp(0)
+
+  @@map("instagram_tokens")
+}
+
+model Ticket {
+  id               Int       @id @default(autoincrement())
+  content          String?   @db.Text
+  escalated        Boolean?  @default(false)
+  created_at       DateTime  @default(now()) @db.Timestamp(0)
+  ticket_type      String?   @db.VarChar(255)
+  subject          String?   @db.VarChar(255)
+  customer_name    String?   @db.VarChar(255)
+  customer_phone   String?   @db.VarChar(255)
+  assignee         String?   @db.VarChar(255)
+  priority         String?   @db.VarChar(20)
+  status           String?   @default("Open") @db.VarChar(50)
+  tags             String?   @db.Text
+  attachments      String?   @db.Text
+
+  @@map("tickets")
+}
+
+model Order {
+  id               Int       @id @default(autoincrement())
+  order_id         String    @db.VarChar(255)
+  customer_name    String?   @db.VarChar(255)
+  phone            String?   @db.VarChar(255)
+  product          String?   @db.Text
+  items            String?   @db.Text
+  amount           Float?
+  total_amount     Float?
+  status           String?   @db.VarChar(255)
+  order_date       DateTime?
+  conversation_id  Int?
+
+  // Relations
+  conversation     Conversation? @relation(fields: [conversation_id], references: [id])
+  deliveries       Delivery[]
+
+  @@map("orders")
+}
+
+model Delivery {
+  id                     Int       @id @default(autoincrement())
+  order_id               Int
+  rider_name             String?   @db.VarChar(255)
+  vehicle                String?   @db.VarChar(128)
+  current_lat            Float?
+  current_lng            Float?
+  customer_lat           Float?
+  customer_lng           Float?
+  delivery_status        String?   @default("pending") @db.VarChar(64)
+  order_confirmed_time   DateTime?
+  rider_assigned_time    DateTime?
+  picked_up_time         DateTime?
+  in_transit_time        DateTime?
+  arriving_time          DateTime?
+  delivered_time         DateTime?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @default(now()) @updatedAt
+
+  // Relations
+  order                  Order     @relation(fields: [order_id], references: [id], onDelete: Cascade)
+
+  @@map("deliveries")
+  @@index([order_id])
+}
+
+model InstagramConversation {
+  id               Int       @id @default(autoincrement())
+  conversation_id  Int       @unique
+  ig_id            String?   @db.VarChar(255)
+  ig_username      String?   @db.VarChar(255)
+  created_at       DateTime  @default(now()) @db.Timestamp(0)
+
+  // Relations
+  conversation     Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@map("instagram_conversations")
+}
+
+model Receipt {
+  id          Int       @id @default(autoincrement())
+  content     String?   @db.Text
+  escalated   Boolean?  @default(false)
+  created_at  DateTime  @default(now()) @db.Timestamp(0)
+
+  @@map("receipts")
+}
+
+model Food {
+  id         Int      @id @default(autoincrement())
+  category   String   @db.VarChar(100)
+  key_name   String   @db.VarChar(100)
+  name       String   @db.VarChar(255)
+  price      Float    @default(0)
+  available  Int      @default(0)
+  image_url  String?  @db.Text
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@map("foods")
+  @@unique([category, key_name])
+}

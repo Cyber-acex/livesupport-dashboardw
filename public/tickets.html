@@ -2,11 +2,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="icon" href="/favicon-icon.svg" type="image/svg+xml">
+  <link rel="shortcut icon" href="/favicon-icon.svg">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>document.documentElement.classList.add('ls-js');</script>
+  <script src="./js/user.js"></script>
   <title>LiveSupport - Tickets</title>
   <link rel="stylesheet" href="./css/style.css">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./css/sidebar.css">
   <script>
     // Apply theme from localStorage immediately to prevent flash
     (function applyThemeImmediately() {
@@ -35,6 +39,61 @@
         background: #ffffff !important;
       }
     }
+
+    /* Modern form inputs styling for header */
+    .tickets-header input,
+    .tickets-header select {
+      padding: 10px 14px !important;
+      border: 2px solid #e5e7eb !important;
+      border-radius: 10px !important;
+      font-size: 13px !important;
+      background: #f9fafb !important;
+      color: #1f2937 !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .tickets-header input::placeholder {
+      color: #9ca3af !important;
+    }
+
+    .tickets-header input:hover,
+    .tickets-header select:hover {
+      border-color: #d1d5db !important;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07) !important;
+    }
+
+    .tickets-header input:focus,
+    .tickets-header select:focus {
+      outline: none !important;
+      border-color: #2563eb !important;
+      background: #ffffff !important;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1), 0 4px 12px rgba(37, 99, 235, 0.15) !important;
+    }
+
+    .dark-theme .tickets-header input,
+    .dark-theme .tickets-header select {
+      background: #232a36 !important;
+      color: #e2e8f0 !important;
+      border-color: #374151 !important;
+    }
+
+    .dark-theme .tickets-header input::placeholder {
+      color: #9ca3af !important;
+    }
+
+    .dark-theme .tickets-header input:hover,
+    .dark-theme .tickets-header select:hover {
+      border-color: #4b5563 !important;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .dark-theme .tickets-header input:focus,
+    .dark-theme .tickets-header select:focus {
+      border-color: #60a5fa !important;
+      background: #1e232b !important;
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1), 0 4px 12px rgba(96, 165, 250, 0.2) !important;
+    }
   </style>
 </head>
 <body>
@@ -43,11 +102,13 @@
   <aside class="sidebar">
     <h2 class="logo">LiveSupport</h2>
     <nav class="menu">
-        <a href="./dashboard.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg><span class="nav-label">Inbox</span></a>
+        <a href="./dashboard.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg><span class="nav-label">Dashboard</span></a>
                 <a href="./tickets.html" class="active"><svg  viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 7V4H4v3H2v10h18V7h-0zM6 6h12v2H6V6zm12 10H6v-6h12v6z"/></svg><span class="nav-label">Tickets</span></a>
                 <a href="./staff-performance.html" class=""><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 9h3v11H5zM10 4h3v16h-3zM15 13h3v7h-3z"/></svg><span class="nav-label">Staff Performance</span></a>
                 <a href="./analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 17h2V9H3v8zm4 0h2V3H7v14zm4 0h2v-6h-2v6zm4 0h2v-9h-2v9z"/></svg><span class="nav-label">Analytics</span></a>
                 <a href="./knowledge.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7v6c0 5 4 9 10 9s10-4 10-9V7l-10-5zM12 4.4L18.6 8 12 11.6 5.4 8 12 4.4z"/></svg><span class="nav-label">Knowledge Base</span></a>
+                <a href="./learning.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a7 7 0 00-7 7c0 3.87 3.13 7 7 7s7-3.13 7-7a7 7 0 00-7-7zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg><span class="nav-label">AI Learning</span></a>
+                <a href="./menu.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg><span class="nav-label">Menu</span></a>
                 <a href="./orders.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2zM7.16 14l.84-2h7.45l1.24 3H7.16zM7.6 6h10.8l-1.2 3H8.8L7.6 6z"/></svg><span class="nav-label">Orders</span></a>
                 <a href="./tracking.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a4 4 0 100 8 4 4 0 000-8zm0-6c-6.6 0-12 5.4-12 12 0 3.6 1.6 6.8 4.2 9l.8-2.6C4.1 19.1 3 16.6 3 14 3 8.5 7.6 4 13 4s10 4.5 10 10c0 2.6-1.1 5.1-2.9 6.4L21 23c2.6-2.2 4-5.4 4-9 0-6.6-5.4-12-12-12z"/></svg><span class="nav-label">Tracking</span></a>
                 <a href="./instagram.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 2h10a5 5 0 015 5v10a5 5 0 01-5 5H7a5 5 0 01-5-5V7a5 5 0 015-5zm5 6a5 5 0 100 10 5 5 0 000-10zm4-3a1 1 0 110 2 1 1 0 010-2z"/></svg><span class="nav-label">Instagram</span></a>
@@ -61,200 +122,846 @@
           Branch: <strong>Ikeja Branch</strong>
       </div>
       <div class="top-right">
-          <span>Staff: <span id="staffName">Loading...</span></span>
-          <a href="/logout"><button class="logout-btn" class="logout">Logout</button></a>
+        <div class="profile">
+          <button id="profileBtn" class="btn profile-btn" aria-haspopup="true" aria-expanded="false">
+            <div class="profile-status-mini" id="profileStatusMini"><span class="status-dot-mini online"></span></div>
+            <img class="avatar-sm-img" src="" alt="avatar" style="display:none" />
+            <span class="avatar-sm">A</span>
+          </button>
+          <div id="profileDropdown" class="profile-dropdown" aria-hidden="true">
+            <div class="profile-info"><strong id="profileName">Staff</strong></div>
+            <div class="profile-status">
+              <div class="status-header">
+                <span class="status-label">Status</span>
+                <div class="status-indicator" id="statusIndicator">
+                  <span class="status-dot online"></span>
+                  <span class="status-text">Online</span>
+                </div>
+              </div>
+              <div class="status-toggle">
+                <button class="status-btn online active" data-status="online"><span class="status-dot online"></span> Online</button>
+                <button class="status-btn away" data-status="away"><span class="status-dot away"></span> Away</button>
+                <button class="status-btn offline" data-status="offline"><span class="status-dot offline"></span> Offline</button>
+              </div>
+            </div>
+            <div class="profile-session">
+              <div class="session-header">Session Info</div>
+              <div class="session-details">
+                <div class="session-item"><span class="session-icon">🕐</span><span class="session-label">Logged in:</span><span class="session-value" id="loginTime">--:--</span></div>
+                <div class="session-item"><span class="session-icon">⏱️</span><span class="session-label">Duration:</span><span class="session-value" id="sessionDuration">--:--</span></div>
+                <div class="session-item"><span class="session-icon">⚡</span><span class="session-label">Last activity:</span><span class="session-value" id="lastActivity">--:--</span></div>
+              </div>
+            </div>
+            <div class="profile-actions">
+              <a id="profileSettings" class="profile-action" href="settings.html"><span class="profile-icon">⚙️</span> Settings</a>
+              <button id="logoutBtn" class="profile-action"><span class="profile-icon">🚪</span> Logout</button>
+            </div>
+          </div>
+        </div>
       </div>
     </header>
     <!-- CONTENT -->
     <section class="content">
       <div class="tickets-header">
-        <h1>Tickets</h1>
-        <button id="createTicketBtn" class="action-btn">Create Ticket</button>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <h1>Tickets</h1>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <input id="ticketSearch" placeholder="Search tickets, IDs, content or assignee..." style="width:360px;">
+            <select id="statusFilter">
+              <option value="all">All statuses</option>
+              <option value="open">Open</option>
+              <option value="closed">Closed</option>
+              <option value="escalated">Escalated</option>
+            </select>
+            <select id="sortTickets">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+            <button id="bulkEscalate" class="btn-primary">Escalate Selected</button>
+            <button id="bulkDelete" class="btn-primary" style="background:#ef4444">Delete Selected</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <button id="createTicketBtn" class="action-btn">Create Ticket</button>
+        </div>
       </div>
-      <div id="ticketNotificationBar" class="notification-bar" style="display:none; background: #10b981; color: white; padding: 10px; margin-bottom: 12px; border-radius: 6px; position: relative;">
+
+      <div id="ticketNotificationBar" class="notification-bar" style="display:none; background: #10b981; color: white; padding: 10px; border-radius: 6px; position: fixed; top: 72px; left: 50%; transform: translateX(-50%); z-index: 9999; max-width: 780px; width: calc(100% - 40px);">
         <span id="ticketNotificationText">Ticket created successfully.</span>
         <button id="ticketNotificationClose" style="position:absolute; right:10px; top:5px; background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
       </div>
+
+      <div style="display:flex;gap:18px;align-items:center;margin-bottom:12px;">
+        <div style="font-size:14px;color:#374151">Showing <span id="ticketsCount">0</span> tickets</div>
+        <div id="loadingState" style="display:none;color:#6b7280">Loading...</div>
+      </div>
+
       <p id="emptyState">No tickets yet.</p>
-      <div id="ticketList" class="tickets-list"></div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <label style="display:flex;align-items:center;gap:8px;color:#6b7280"><input id="selectAll" type="checkbox"> Select all on page</label>
+        </div>
+        <div id="ticketList" class="tickets-list"></div>
+      </div>
     </section>
   </div>
 </div>
 <!-- TICKET MODAL -->
 <div id="ticketModal" class="modal">
+  <style>
+    #ticketModal input,
+    #ticketModal select,
+    #ticketModal textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f9fafb;
+      color: #1f2937;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    #ticketModal input::placeholder,
+    #ticketModal textarea::placeholder {
+      color: #9ca3af;
+    }
+
+    #ticketModal input:hover,
+    #ticketModal select:hover,
+    #ticketModal textarea:hover {
+      border-color: #d1d5db;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    }
+
+    #ticketModal input:focus,
+    #ticketModal select:focus,
+    #ticketModal textarea:focus {
+      outline: none;
+      border-color: #2563eb;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1), 0 4px 12px rgba(37, 99, 235, 0.15);
+    }
+
+    #ticketModal label {
+      display: block;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 8px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    #ticketModal > div > div > div {
+      position: relative;
+    }
+
+    /* Dark theme overrides */
+    .dark-theme #ticketModal input,
+    .dark-theme #ticketModal select,
+    .dark-theme #ticketModal textarea {
+      background: #232a36;
+      color: #e2e8f0;
+      border-color: #374151;
+    }
+
+    .dark-theme #ticketModal input::placeholder,
+    .dark-theme #ticketModal textarea::placeholder {
+      color: #9ca3af;
+    }
+
+    .dark-theme #ticketModal input:hover,
+    .dark-theme #ticketModal select:hover,
+    .dark-theme #ticketModal textarea:hover {
+      border-color: #4b5563;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .dark-theme #ticketModal input:focus,
+    .dark-theme #ticketModal select:focus,
+    .dark-theme #ticketModal textarea:focus {
+      border-color: #60a5fa;
+      background: #1e232b;
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1), 0 4px 12px rgba(96, 165, 250, 0.2);
+    }
+
+    .dark-theme #ticketModal label {
+      color: #e2e8f0;
+    }
+  </style>
   <div class="modal-content">
     <span class="close-btn">&times;</span>
-    <h2>Restaurant Payment Ticket</h2>
-    <textarea id="ticketText" spellcheck="false">
----------------------------------------------
-Ticket ID: #1023
-Submitted by: ......
-Time: 14:32, 25 Mar 2026
-Status: Open
-Message: ".........."
----------------------------------------------
-    </textarea>
-    <div class="modal-actions">
-      <button id="saveTicket" class="ai-btn primary">Save</button>
-      <button id="printTicket" class="ai-btn success">Print</button>
+    <h2>Create Ticket</h2>
+    <form id="ticketForm">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+        <div style="flex:1;min-width:220px">
+          <label>Ticket Type</label>
+          <select id="ticketType">
+            <option value="">-- Select ticket type --</option>
+            <option value="Delivery delay">Delivery delay</option>
+            <option value="Refund">Refund</option>
+            <option value="Bad quality">Bad quality</option>
+            <option value="General complaint">General complaint</option>
+            <option value="Support request">Support request</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+        <div style="flex:1;min-width:160px">
+          <label>Priority</label>
+          <select id="ticketPriority">
+            <option value="Low">Low</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="High">High</option>
+            <option value="Urgent">Urgent</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:160px">
+          <label>Status</label>
+          <select id="ticketStatus">
+            <option value="Open" selected>Open</option>
+            <option value="Assigned">Assigned</option>
+            <option value="Resolved">Resolved</option>
+            <option value="Closed">Closed</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+        <div style="flex:1;min-width:200px">
+          <label>Customer name</label>
+          <input id="ticketCustomer" placeholder="Customer name" />
+        </div>
+        <div style="flex:1;min-width:160px">
+          <label>Phone / ID</label>
+          <input id="ticketPhone" placeholder="Phone or identifier" />
+        </div>
+        <div style="flex:1;min-width:160px">
+          <label>Assignee</label>
+          <input id="ticketAssignee" placeholder="Assign to (optional)" />
+        </div>
+      </div>
+
+      <div style="margin-bottom:10px">
+        <label>Tags (comma separated)</label>
+        <input id="ticketTags" placeholder="refund, payment, urgent" />
+      </div>
+
+      <div style="margin-bottom:10px">
+        <label>Message</label>
+        <textarea id="ticketText" spellcheck="false" style="min-height:140px;resize:vertical;"></textarea>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
+        <label style="display:flex;flex-direction:column;font-size:12px">Attach file(s) <span style="font-size:11px;color:#6b7280">(optional, images or documents)</span>
+          <input id="ticketFiles" type="file" multiple style="margin-top:6px" />
+        </label>
+        <div id="filePreview" style="font-size:13px;color:#374151"></div>
+      </div>
+
+      <div class="modal-actions" style="display:flex;gap:8px;justify-content:flex-end">
+        <button type="button" id="saveTicket" class="ai-btn primary">Create</button>
+        <button type="button" id="printTicket" class="ai-btn success">Print</button>
+        <button type="button" id="cancelTicket" class="ai-btn ghost">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TICKET VIEW MODAL (READ-ONLY) -->
+<div id="ticketViewModal" class="modal">
+  <style>
+    #ticketViewModal .modal-content {
+      max-width: 700px;
+    }
+
+    #ticketViewModal .view-field {
+      margin-bottom: 24px;
+    }
+
+    #ticketViewModal .view-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    #ticketViewModal .view-value {
+      font-size: 15px;
+      color: #1f2937;
+      font-weight: 500;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+
+    #ticketViewModal .view-value.content {
+      background: #f9fafb;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      font-family: 'Courier New', monospace;
+      white-space: pre-wrap;
+      font-size: 14px;
+    }
+
+    #ticketViewModal .view-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    #ticketViewModal .view-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+
+    #ticketViewModal .view-badge.priority-high {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    #ticketViewModal .view-badge.priority-urgent {
+      background: #fecaca;
+      color: #7f1d1d;
+    }
+
+    #ticketViewModal .view-badge.priority-low {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    #ticketViewModal .tags-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    #ticketViewModal .tag-badge {
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    #ticketViewModal .attachments-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    #ticketViewModal .attachment-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: #f3f4f6;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #2563eb;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    #ticketViewModal .attachment-item:hover {
+      background: #e5e7eb;
+      text-decoration: underline;
+    }
+
+    .dark-theme #ticketViewModal .view-value {
+      color: #e2e8f0;
+    }
+
+    .dark-theme #ticketViewModal .view-label {
+      color: #9ca3af;
+    }
+
+    .dark-theme #ticketViewModal .view-value.content {
+      background: #232a36;
+      color: #e2e8f0;
+      border-color: #374151;
+    }
+
+    .dark-theme #ticketViewModal .view-badge {
+      background: #312e81;
+      color: #c7d2fe;
+    }
+
+    .dark-theme #ticketViewModal .tag-badge {
+      background: #1e3a8a;
+      color: #93c5fd;
+    }
+
+    .dark-theme #ticketViewModal .attachment-item {
+      background: #374151;
+      color: #60a5fa;
+    }
+
+    .dark-theme #ticketViewModal .attachment-item:hover {
+      background: #4b5563;
+    }
+  </style>
+  <div class="modal-content">
+    <span class="close-btn" id="viewCloseBtn">&times;</span>
+    <h2 id="viewTicketTitle">Ticket Details</h2>
+    <div style="margin-top: 24px;">
+      <div class="view-grid">
+        <div class="view-field">
+          <span class="view-label">Ticket ID</span>
+          <span class="view-value" id="viewTicketId">#-</span>
+        </div>
+        <div class="view-field">
+          <span class="view-label">Type</span>
+          <span class="view-value" id="viewTicketType">-</span>
+        </div>
+        <div class="view-field">
+          <span class="view-label">Priority</span>
+          <span class="view-value"><span class="view-badge" id="viewPriorityBadge">-</span></span>
+        </div>
+        <div class="view-field">
+          <span class="view-label">Status</span>
+          <span class="view-value"><span class="view-badge" id="viewStatusBadge">-</span></span>
+        </div>
+      </div>
+
+      <div class="view-field">
+        <span class="view-label">Customer</span>
+        <span class="view-value" id="viewCustomer">-</span>
+      </div>
+
+      <div class="view-grid">
+        <div class="view-field">
+          <span class="view-label">Phone / ID</span>
+          <span class="view-value" id="viewPhone">-</span>
+        </div>
+        <div class="view-field">
+          <span class="view-label">Assignee</span>
+          <span class="view-value" id="viewAssignee">-</span>
+        </div>
+      </div>
+
+      <div class="view-field">
+        <span class="view-label">Created</span>
+        <span class="view-value" id="viewCreated">-</span>
+      </div>
+
+      <div class="view-field" id="tagsField" style="display:none;">
+        <span class="view-label">Tags</span>
+        <div class="tags-list" id="viewTags"></div>
+      </div>
+
+      <div class="view-field">
+        <span class="view-label">Message</span>
+        <pre class="view-value content" id="viewContent">-</pre>
+      </div>
+
+      <div class="view-field" id="attachmentsField" style="display:none;">
+        <span class="view-label">Attachments</span>
+        <div class="attachments-list" id="viewAttachments"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="display:flex;gap:8px;justify-content:flex-end;margin-top:24px;">
+      <button type="button" id="viewPrintBtn" class="ai-btn success">Print</button>
+      <button type="button" id="viewCloseTicketBtn" class="ai-btn ghost">Close</button>
     </div>
   </div>
 </div>
 
 
 <script>
-const modal = document.getElementById("ticketModal");
-const openBtn = document.getElementById("createTicketBtn");
-const closeBtn = document.querySelector(".close-btn");
-const saveBtn = document.getElementById("saveTicket");
-const printBtn = document.getElementById("printTicket");
-const ticketList = document.getElementById("ticketList");
-const emptyState = document.getElementById("emptyState");
-// Notification utilities
-const ticketNotificationBar = document.getElementById("ticketNotificationBar");
-const ticketNotificationText = document.getElementById("ticketNotificationText");
-const ticketNotificationClose = document.getElementById("ticketNotificationClose");
-function showTicketNotification(message) {
-  if (!ticketNotificationBar || !ticketNotificationText) return;
-  ticketNotificationText.textContent = message;
-  ticketNotificationBar.style.display = "block";
-  clearTimeout(showTicketNotification.timeout);
-  showTicketNotification.timeout = setTimeout(() => {
-    ticketNotificationBar.style.display = "none";
-  }, 5000);
-}
-function hideTicketNotification() {
-  if (!ticketNotificationBar) return;
-  ticketNotificationBar.style.display = "none";
-}
-ticketNotificationClose.addEventListener("click", hideTicketNotification);
-// Pending notification on load
-const pendingTicketNotification = localStorage.getItem("ticketCreatedNotification");
-if (pendingTicketNotification) {
-  try {
-    const ticketData = JSON.parse(pendingTicketNotification);
-    showTicketNotification(`New ticket #${ticketData.id} created.`);
-  } catch (e) {
-    console.error("Invalid ticket notification in storage", e);
-  }
-  localStorage.removeItem("ticketCreatedNotification");
-}
-// Open modal
-openBtn.onclick = () => modal.style.display = "block";
-// Close modal
-closeBtn.onclick = () => modal.style.display = "none";
-// Close modal on outside click
-window.onclick = (e) => {
-  if (e.target === modal) modal.style.display = "none";
-};
-// Save ticket
-saveBtn.onclick = async () => {
-  const content = document.getElementById("ticketText").value;
-  const res = await fetch("/api/tickets", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ content })
-  });
-  if (res.ok) {
-    const created = await res.json();
-    // Browser alert
-    alert(`Ticket #${created.id} created successfully.`);
-    // In-page notification
-    showTicketNotification(`Ticket #${created.id} created successfully.`);
-    // Browser notification if ticket alerts are enabled
-    if (localStorage.getItem('ticketAlert') === 'true' && 'Notification' in window && Notification.permission === 'granted') {
-      new Notification('LiveSupport - New Ticket', {
-        body: `Ticket #${created.id} created.`,
-        icon: '/favicon.ico'
-      });
-    }
-    // Persist notification for dashboard page and so it can be shown there
-    localStorage.setItem("ticketCreatedNotification", JSON.stringify({
-      id: created.id,
-      message: "New ticket created.",
-      timestamp: new Date().toISOString()
-    }));
-    modal.style.display = "none";
-    loadTickets();
-  } else {
-    alert("Failed to create ticket. Please try again.");
-  }
-};
-// Load tickets from backend
-async function loadTickets() {
-  const res = await fetch("/api/tickets");
-  const data = await res.json();
-  ticketList.innerHTML = "";
-  if (data.length === 0) {
-    emptyState.style.display = "block";
-    return;
-  }
-  emptyState.style.display = "none";
-  data.forEach(t => {
-  const div = document.createElement("div");
-  div.classList.add("ticketItem");
-  // Ticket content with print button
-  div.innerHTML = `
-    <div class="ticket-header" style="display: flex; justify-content: space-between; align-items: center;">
-      <h4>Ticket #${t.id} (${new Date(t.created_at).toLocaleString()})</h4>
-      <div>
-        <button class="escalateBtn" style="background: red; color: white; border: none; padding: 5px 10px; margin-right: 5px;">Escalate</button>
-        <button class="printTicketBtn" style="background: blue; color: white; border: none; padding: 5px 10px;">Print</button>
-      </div>
-    </div>
-    <div class="escalated-label" style="display: ${t.escalated ? 'block' : 'none'}; color: red; font-weight: bold; text-align: center; margin-bottom: 10px; font-size: 18px;">ESCALATED</div>
-    <pre>${t.content}</pre>
-  `;
-  // Add click event for escalate button
-  div.querySelector(".escalateBtn").onclick = async () => {
-    await fetch("/api/escalate-ticket", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ticket_id: t.id })
+(()=>{
+  const modal = document.getElementById("ticketModal");
+  const viewModal = document.getElementById("ticketViewModal");
+  const openBtn = document.getElementById("createTicketBtn");
+  const closeBtn = document.querySelector(".close-btn");
+  const viewCloseBtn = document.getElementById("viewCloseBtn");
+  const viewCloseTicketBtn = document.getElementById("viewCloseTicketBtn");
+  const saveBtn = document.getElementById("saveTicket");
+  const printBtn = document.getElementById("printTicket");
+  const viewPrintBtn = document.getElementById("viewPrintBtn");
+  const ticketList = document.getElementById("ticketList");
+  const emptyState = document.getElementById("emptyState");
+  const ticketsCountEl = document.getElementById('ticketsCount');
+  const loadingState = document.getElementById('loadingState');
+
+  const searchInput = document.getElementById('ticketSearch');
+  const statusFilter = document.getElementById('statusFilter');
+  const sortSelect = document.getElementById('sortTickets');
+  const selectAllCheckbox = document.getElementById('selectAll');
+  const bulkEscalateBtn = document.getElementById('bulkEscalate');
+  const bulkDeleteBtn = document.getElementById('bulkDelete');
+
+  let ticketsData = [];
+  let visibleTicketIds = new Set();
+  let currentViewedTicket = null;
+
+  function showLoading(on=true){ loadingState.style.display = on ? 'block' : 'none'; }
+
+  // reuse existing notification functions if present
+  const notify = window.showTicketNotification || function(msg){
+    const bar = document.getElementById('ticketNotificationBar');
+    const text = document.getElementById('ticketNotificationText');
+    if(bar && text){ text.textContent = msg; bar.style.display = 'block'; setTimeout(()=>bar.style.display='none',4000); }
+  };
+
+  // broadcast staff notification to other logged-in staff (best-effort)
+  const broadcastStaffNotification = async (msg) => {
+    try{
+      const r = await fetch('/api/broadcast-notification', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ message: msg }) });
+      r.json().then(j=>{ if(j && j.recipients!==undefined) console.log('broadcast response', j); }).catch(()=>{});
+    }catch(e){ /* ignore errors */ }
+  };
+
+  openBtn.onclick = () => {
+    // reset form
+    document.getElementById('ticketForm').reset();
+    document.getElementById('filePreview').textContent = '';
+    modal.style.display = 'block';
+  };
+  closeBtn.onclick = () => modal.style.display = "none";
+  const cancelBtn = document.getElementById('cancelTicket');
+  if(cancelBtn) cancelBtn.onclick = () => modal.style.display = 'none';
+  window.addEventListener('click', (e)=>{ if(e.target===modal) modal.style.display='none'; });
+  
+  // View modal handlers
+  viewCloseBtn.onclick = () => viewModal.style.display = "none";
+  viewCloseTicketBtn.onclick = () => viewModal.style.display = "none";
+  window.addEventListener('click', (e)=>{ if(e.target===viewModal) viewModal.style.display='none'; });
+  // enhanced save: send structured ticket data; supports FormData if files selected
+  saveBtn.onclick = async () => {
+    const ticketType = document.getElementById('ticketType').value.trim();
+    const priority = document.getElementById('ticketPriority').value;
+    const status = document.getElementById('ticketStatus').value;
+    const customer = document.getElementById('ticketCustomer').value.trim();
+    const phone = document.getElementById('ticketPhone').value.trim();
+    const assignee = document.getElementById('ticketAssignee').value.trim();
+    const tagsRaw = document.getElementById('ticketTags').value.trim();
+    const tags = tagsRaw ? tagsRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
+    const content = document.getElementById('ticketText').value.trim();
+    const files = document.getElementById('ticketFiles').files;
+
+    if(!ticketType){ alert('Please select a ticket type'); return; }
+    if(!content){ alert('Please provide a message'); return; }
+
+    try{
+      let res;
+      if(files && files.length>0){
+        const fd = new FormData();
+        fd.append('ticket_type', ticketType);
+        fd.append('subject', ticketType);
+        fd.append('priority', priority);
+        fd.append('status', status);
+        fd.append('customer_name', customer);
+        fd.append('customer_phone', phone);
+        fd.append('assignee', assignee);
+        fd.append('content', content);
+        fd.append('tags', JSON.stringify(tags));
+        for(let i=0;i<files.length;i++) fd.append('files', files[i]);
+        res = await fetch('/api/tickets', { method: 'POST', body: fd });
+      } else {
+        res = await fetch('/api/tickets', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ticket_type: ticketType, subject: ticketType, priority, status, customer_name: customer, customer_phone: phone, assignee, content, tags }) });
+      }
+
+      if(!res.ok) throw new Error('create-failed');
+      const created = await res.json();
+      const note = `Ticket #${created.id} created`;
+      notify(note);
+      broadcastStaffNotification(note);
+      localStorage.setItem('ticketCreatedNotification', JSON.stringify({id: created.id, timestamp: new Date().toISOString()}));
+      modal.style.display='none';
+      await fetchTickets();
+    }catch(err){ alert('Failed to create ticket'); console.error(err); }
+  };
+
+  printBtn.onclick = () => {
+    const ticketType = document.getElementById('ticketType').value.trim();
+    const content = document.getElementById('ticketText').value;
+    const customer = document.getElementById('ticketCustomer').value.trim();
+    const phone = document.getElementById('ticketPhone').value.trim();
+    const out = `Ticket Type: ${ticketType}\nCustomer: ${customer} (${phone})\n\n${content}`;
+    const w = window.open('','', 'height=600,width=800');
+    w.document.write('<pre class="print-black">'+escapeHtml(out)+'</pre>');
+    w.document.close(); w.print();
+  };
+
+  viewPrintBtn.onclick = () => {
+    if(!currentViewedTicket) return;
+    const t = currentViewedTicket;
+    const ticketType = t.ticket_type || '-';
+    const content = t.content || '';
+    const customer = t.customer_name || '-';
+    const phone = t.customer_phone || '-';
+    const out = `Ticket #${t.id}\nTicket Type: ${ticketType}\nCustomer: ${customer} (${phone})\n\n${content}`;
+    const w = window.open('','', 'height=600,width=800');
+    w.document.write('<pre class="print-black">'+escapeHtml(out)+'</pre>');
+    w.document.close(); w.print();
+  };
+
+  // file preview
+  const fileInput = document.getElementById('ticketFiles');
+  const filePreview = document.getElementById('filePreview');
+  if(fileInput){
+    fileInput.addEventListener('change', ()=>{
+      const names = Array.from(fileInput.files || []).map(f=>f.name);
+      filePreview.textContent = names.length ? names.join(', ') : '';
     });
-    loadTickets(); // Reload to show the label
-  };
-  // Add click event for this ticket's print button
-  div.querySelector(".printTicketBtn").onclick = () => {
-    const printWindow = window.open('', '', 'height=600,width=800');
-    printWindow.document.write('<pre>' + t.content + '</pre>');
-    printWindow.document.close();
-    printWindow.print();
-  };
-  ticketList.appendChild(div);
-});
-}
-// Print ticket
-printBtn.onclick = () => {
-  const ticketContent = document.getElementById("ticketText").value;
-  const printWindow = window.open('', '', 'height=600,width=800');
-  printWindow.document.write('<pre class="print-black">' + ticketContent + '</pre>');
-  printWindow.document.close();
-  printWindow.print();
-};
-// Load staff name
-fetch("/api/user")
-  .then(res => res.json())
-  .then(data => document.getElementById("staffName").textContent = data.role)
-  .catch(err => console.log("User fetch error", err));
-function applyTicketPageTheme() {
-  const theme = localStorage.getItem('theme') || 'Light';
-  if (theme === 'Dark') {
-    document.documentElement.classList.add('dark-theme');
-  } else {
-    document.documentElement.classList.remove('dark-theme');
   }
-}
-window.addEventListener('storage', (e) => {
-  if (e.key === 'theme') applyTicketPageTheme();
-});
-window.addEventListener('focus', applyTicketPageTheme);
-// Load tickets on page load
-loadTickets();
+
+  async function fetchTickets(){
+    showLoading(true);
+    try{
+      const res = await fetch('/api/tickets');
+      const data = await res.json();
+      ticketsData = Array.isArray(data) ? data : [];
+      renderTickets();
+    }catch(err){ console.error('tickets fetch', err); ticketsData = []; renderTickets(); }
+    showLoading(false);
+  }
+
+  function formatDate(ts){ try{return new Date(ts).toLocaleString();}catch(e){return '-';} }
+
+  function renderTickets(){
+    ticketList.innerHTML = '';
+    const q = (searchInput.value||'').toLowerCase().trim();
+    const status = statusFilter.value;
+    const sort = sortSelect.value;
+
+    let list = ticketsData.slice();
+    if(status !== 'all') list = list.filter(t => {
+      if(status === 'escalated') return !!t.escalated;
+      return (t.status || '').toLowerCase() === status;
+    });
+    if(q) list = list.filter(t => (String(t.id)+ ' ' + (t.content||'') + ' ' + (t.assignee||'')).toLowerCase().includes(q));
+    list.sort((a,b)=> sort==='newest' ? (new Date(b.created_at) - new Date(a.created_at)) : (new Date(a.created_at)-new Date(b.created_at)) );
+
+    ticketsCountEl.textContent = list.length;
+
+    if(list.length===0){ emptyState.style.display='block'; return; } else { emptyState.style.display='none'; }
+
+    visibleTicketIds.clear();
+
+    list.forEach(t=>{
+      const card = document.createElement('div');
+      card.className = 'ticketItem';
+      const created = formatDate(t.created_at);
+      const escalated = t.escalated ? true : false;
+      const assignee = t.assignee ? `<div style="font-size:13px;color:#374151">Assignee: <strong>${escapeHtml(t.assignee)}</strong></div>` : '';
+      const priority = t.priority ? escapeHtml(t.priority) : '';
+      const status = t.status ? escapeHtml(t.status) : 'Open';
+      const subject = t.subject ? escapeHtml(t.subject) : '(No subject)';
+      const customer = t.customer_name ? escapeHtml(t.customer_name) : (t.customer_phone ? escapeHtml(t.customer_phone) : 'Unknown');
+      // attachments may be JSON string
+      let attachmentsHtml = '';
+      try{
+        const at = t.attachments ? (typeof t.attachments === 'string' ? JSON.parse(t.attachments) : t.attachments) : null;
+        if(Array.isArray(at) && at.length>0){
+          attachmentsHtml = '<div style="margin-top:8px"><strong>Attachments:</strong> ' + at.map(a=>`<a href="/uploads/${encodeURIComponent(a.filename)}" target="_blank">${escapeHtml(a.originalname||a.filename)}</a>`).join(', ') + '</div>';
+        }
+      }catch(e){ attachmentsHtml = ''; }
+
+      const tagsArr = (()=>{
+        try{ if(!t.tags) return []; if(typeof t.tags==='string' && t.tags.startsWith('[')) return JSON.parse(t.tags); if(typeof t.tags==='string') return t.tags.split(',').map(s=>s.trim()).filter(Boolean); return Array.isArray(t.tags)?t.tags:[] }catch(e){return[]}
+      })();
+      const tagsHtml = tagsArr.length ? `<div class="tags-badges">${tagsArr.map(tag=>`<span class="ticket-tag">${escapeHtml(tag)}</span>`).join('')}</div>` : '';
+
+      card.innerHTML = `
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <input type="checkbox" class="ticket-checkbox" data-id="${t.id}" style="margin-top:6px;" />
+          <div style="flex:1">
+            <div class="ticket-header" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="font-size:16px;font-weight:800">${subject}</div>
+                  <div style="font-size:12px;color:#374151">• #${t.id} — <span style="color:#6b7280;font-weight:500">${created}</span></div>
+                </div>
+                <div style="margin-top:8px;font-size:13px;color:#374151">Customer: <strong>${customer}</strong> ${assignee}</div>
+                <div style="margin-top:8px">${tagsHtml}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+                <div style="display:flex;gap:8px;align-items:center">
+                  <div class="status-badge">${status}</div>
+                  <div class="priority-badge">${priority}</div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <button class="viewBtn" data-id="${t.id}" style="padding:6px 10px;border-radius:8px;border:1px solid #e5e7eb;background:#fff">View</button>
+                  <button class="escalateBtn" data-id="${t.id}" style="padding:6px 10px;border-radius:8px;background:#ef4444;color:#fff;border:none">Escalate</button>
+                  <button class="resolveBtn" data-id="${t.id}" style="padding:6px 10px;border-radius:8px;background:#06b6d4;color:#fff;border:none">Resolved</button>
+                  <button class="printTicketBtn" data-id="${t.id}" style="padding:6px 10px;border-radius:8px;background:#10b981;color:#fff;border:none">Print</button>
+                </div>
+              </div>
+            </div>
+            <pre style="margin-top:12px;white-space:pre-wrap;word-wrap:break-word;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #eef2ff">${escapeHtml(t.content||'')}</pre>
+            ${attachmentsHtml}
+          </div>
+        </div>
+      `;
+
+      // events
+      card.querySelector('.ticket-checkbox').addEventListener('change', (e)=>{
+        if(e.target.checked) visibleTicketIds.add(String(t.id)); else visibleTicketIds.delete(String(t.id));
+      });
+      card.querySelector('.viewBtn').addEventListener('click', ()=>{
+        currentViewedTicket = t;
+        // Populate view modal
+        document.getElementById('viewTicketId').textContent = '#' + t.id;
+        document.getElementById('viewTicketType').textContent = t.ticket_type || '-';
+        document.getElementById('viewCustomer').textContent = t.customer_name || '-';
+        document.getElementById('viewPhone').textContent = t.customer_phone || '-';
+        document.getElementById('viewAssignee').textContent = t.assignee || '-';
+        document.getElementById('viewCreated').textContent = formatDate(t.created_at);
+        document.getElementById('viewContent').textContent = t.content || '-';
+        
+        // Priority badge
+        const priorityBadge = document.getElementById('viewPriorityBadge');
+        priorityBadge.textContent = t.priority || 'Medium';
+        priorityBadge.className = 'view-badge priority-' + (t.priority || 'Medium').toLowerCase();
+        
+        // Status badge
+        const statusBadge = document.getElementById('viewStatusBadge');
+        statusBadge.textContent = t.status || 'Open';
+        statusBadge.className = 'view-badge';
+        
+        // Tags
+        const tagsField = document.getElementById('tagsField');
+        const tagsContainer = document.getElementById('viewTags');
+        const tagsArr = (()=>{
+          try{ if(!t.tags) return []; if(typeof t.tags==='string' && t.tags.startsWith('[')) return JSON.parse(t.tags); if(typeof t.tags==='string') return t.tags.split(',').map(s=>s.trim()).filter(Boolean); return Array.isArray(t.tags)?t.tags:[] }catch(e){return[]}
+        })();
+        if(tagsArr.length > 0){
+          tagsField.style.display = 'block';
+          tagsContainer.innerHTML = tagsArr.map(tag => `<span class="tag-badge">${escapeHtml(tag)}</span>`).join('');
+        } else {
+          tagsField.style.display = 'none';
+        }
+        
+        // Attachments
+        const attachmentsField = document.getElementById('attachmentsField');
+        const attachmentsContainer = document.getElementById('viewAttachments');
+        try{
+          const at = t.attachments ? (typeof t.attachments === 'string' ? JSON.parse(t.attachments) : t.attachments) : null;
+          if(Array.isArray(at) && at.length>0){
+            attachmentsField.style.display = 'block';
+            attachmentsContainer.innerHTML = at.map(a=>`<a href="/uploads/${encodeURIComponent(a.filename)}" target="_blank" class="attachment-item">📎 ${escapeHtml(a.originalname||a.filename)}</a>`).join('');
+          } else {
+            attachmentsField.style.display = 'none';
+          }
+        }catch(e){ attachmentsField.style.display = 'none'; }
+        
+        viewModal.style.display = 'block';
+      });
+      card.querySelector('.escalateBtn').addEventListener('click', async ()=>{
+        await fetch('/api/escalate-ticket', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ticket_id: t.id})});
+        await fetchTickets();
+      });
+      // Resolve button: mark ticket as Resolved
+      const resolveBtnEl = card.querySelector('.resolveBtn');
+      if(resolveBtnEl){
+        resolveBtnEl.addEventListener('click', async ()=>{
+          try{
+            const res = await fetch('/api/resolve-ticket', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ticket_id: t.id })});
+            const json = res.ok ? await res.json() : null;
+            if(json && json.resolved_by){
+              const note = `Ticket #${t.id} resolved by ${json.resolved_by}`;
+              notify(note);
+              broadcastStaffNotification(note);
+            } else if(res.ok){
+              const note = `Ticket #${t.id} resolved`;
+              notify(note);
+              broadcastStaffNotification(note);
+            } else if(json && json.error){
+              alert('Resolve failed: ' + json.error);
+            }
+            await fetchTickets();
+          }catch(e){ console.error('resolve failed', e); }
+        });
+      }
+      card.querySelector('.printTicketBtn').addEventListener('click', ()=>{
+        const w = window.open('','', 'height=600,width=800');
+        w.document.write('<pre>'+escapeHtml(t.content||'')+'</pre>'); w.document.close(); w.print();
+      });
+
+      ticketList.appendChild(card);
+    });
+  }
+
+  function escapeHtml(s){ return String(s).replace(/[&<>\"]/g, (c)=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  // select all visible
+  selectAllCheckbox.addEventListener('change', (e)=>{
+    const checkboxes = ticketList.querySelectorAll('.ticket-checkbox');
+    checkboxes.forEach(cb=>{ cb.checked = e.target.checked; const id = cb.dataset.id; if(cb.checked) visibleTicketIds.add(String(id)); else visibleTicketIds.delete(String(id)); });
+  });
+
+  // bulk actions
+  bulkEscalateBtn.addEventListener('click', async ()=>{
+    if(visibleTicketIds.size===0){ alert('Select tickets first'); return; }
+    const ids = Array.from(visibleTicketIds);
+    await fetch('/api/escalate-ticket', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ticket_ids: ids })});
+    notify('Escalation requested for selected tickets');
+    await fetchTickets();
+  });
+  bulkDeleteBtn.addEventListener('click', async ()=>{
+    if(!confirm('Delete selected tickets?')) return;
+    const ids = Array.from(visibleTicketIds);
+    try{
+      await fetch('/api/tickets/delete', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ids })});
+      notify('Deleted selected tickets');
+      await fetchTickets();
+    }catch(e){ console.error(e); alert('Delete failed'); }
+  });
+
+  // search/filter handlers (debounced)
+  let searchTimer = null;
+  searchInput.addEventListener('input', ()=>{ clearTimeout(searchTimer); searchTimer = setTimeout(renderTickets, 300); });
+  statusFilter.addEventListener('change', renderTickets);
+  sortSelect.addEventListener('change', renderTickets);
+
+  // load staff name
+  fetch('/api/user').then(r=>r.json()).then(d=>{ const el = document.getElementById('staffName'); if(el) el.textContent = d.role || d.name || 'Staff'; }).catch(()=>{});
+
+  // initial load
+  fetchTickets();
+
+})();
 </script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="./js/notification-sound.js"></script>
+<script src="./js/sidebar.js" defer></script>
+<script>
+  // Register socket and listen for staff notifications on tickets page
+  (function(){
+    try{
+      const socket = io();
+      socket.on('connect', ()=>{
+        fetch('/api/user').then(r=>r.json()).then(u=>{ if(u && (u.id || u.name)) socket.emit('agent:register', { userId: u.id, name: u.name || u.role || 'Agent', role: u.role || 'agent' }); }).catch(()=>{});
+      });
+      socket.on('staffNotification', (data)=>{
+        try{
+          const message = data && data.message ? data.message : '';
+          const from = data && data.from ? data.from : 'Staff';
+          notify(`${from}: ${message}`);
+        }catch(e){ console.error('staffNotification (tickets) error', e); }
+      });
+    }catch(e){ console.error('tickets socket init error', e); }
+  })();
+</script>
 </body>
 </html>
+

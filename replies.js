@@ -1,16 +1,23 @@
-// Mistral 7B via Mistral API
-const fetch = require("node-fetch");
-const fs = require("fs");
-const path = require("path");
+import fetch from "node-fetch";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { config as dbConfig } from './db/database.js';
+import vectorStore from './tools/vectorStore.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const isPg = dbConfig && dbConfig.usePostgres;
 const MISTRAL_API_URL = "https://api.mistral.ai/v1/chat/completions";
 const FALLBACK_REPLY = "Thank you for your message. An agent will respond shortly.";
 
 let knowledgeBase = [];
-let db = null;
+let prisma = null;
 
 // Initialize database connection
 function initDatabase(database) {
-    db = database;
+    prisma = database;
 }
 
 function loadKnowledgeBase() {
@@ -30,25 +37,37 @@ loadKnowledgeBase();
 // Menu items from knowledge base
 const MENU_ITEMS = {
     pizza: {
-        small: { name: 'Small Pizza', price: 10 },
-        medium: { name: 'Medium Pizza', price: 15 },
-        large: { name: 'Large Pizza', price: 20 }
+        small: { name: 'Small Pizza', price: 10, available: 12 },
+        medium: { name: 'Medium Pizza', price: 15, available: 8 },
+        large: { name: 'Large Pizza', price: 20, available: 4 }
     },
     burger: {
-        classic: { name: 'Classic Burger', price: 8 },
-        cheese: { name: 'Cheese Burger', price: 9 },
-        double: { name: 'Double Burger', price: 12 }
+        classic: { name: 'Classic Burger', price: 8, available: 10 },
+        cheese: { name: 'Cheese Burger', price: 9, available: 6 },
+        double: { name: 'Double Burger', price: 12, available: 3 }
     }
 };
 
-function findRelevantKB(message) {
-    const keywords = ['price', 'cost', 'menu', 'delivery', 'order', 'hours', 'time', 'pizza', 'burger', 'food', 'previous', 'past', 'history', 'ordered', 'account'];
-    const lowerMessage = message.toLowerCase();
-    const hasKeyword = keywords.some(keyword => lowerMessage.includes(keyword));
-    
-    if (hasKeyword) {
-        return knowledgeBase; // Return all KB if relevant keywords found
+async function findRelevantKB(message) {
+    try {
+        if (!message) return [];
+        // Prefer vector search when available
+        if (vectorStore && typeof vectorStore.search === 'function') {
+            const results = await vectorStore.search(message, 3);
+            if (results && results.length > 0) {
+                // map to KB-like items
+                return results.map(r => ({ title: r.title, content: r.text, score: r.score }));
+            }
+        }
+    } catch (e) {
+        console.warn('findRelevantKB vector search failed', e?.message || e);
     }
+
+    // Fallback: keyword heuristic
+    const keywords = ['price', 'cost', 'menu', 'delivery', 'order', 'hours', 'time', 'pizza', 'burger', 'food', 'previous', 'past', 'history', 'ordered', 'account'];
+    const lowerMessage = (message || '').toLowerCase();
+    const hasKeyword = keywords.some(keyword => lowerMessage.includes(keyword));
+    if (hasKeyword) return knowledgeBase;
     return [];
 }
 
@@ -57,90 +76,67 @@ function normalizePhone(phone) {
     return phone.replace(/\D/g, '');
 }
 
-function getOrderHistory(phone) {
-    return new Promise((resolve) => {
-        if (!db || !phone) {
-            console.log("getOrderHistory: No DB or phone", { hasDb: !!db, phone });
-            resolve(null);
-            return;
-        }
-        
-        const normalizedPhone = normalizePhone(phone);
-        console.log("getOrderHistory: Querying for phone:", phone, "normalized:", normalizedPhone);
-        
-        // First try: exact normalized match
-        db.query(
-            'SELECT product, total_amount, order_date FROM orders WHERE REPLACE(REPLACE(REPLACE(phone, "+", ""), "-", ""), " ", "") = ? ORDER BY order_date DESC LIMIT 5',
-            [normalizedPhone],
-            (err, results) => {
-                if (err) {
-                    console.log("getOrderHistory: Database error on first query:", err);
-                    resolve(null);
-                    return;
+async function getOrderHistory(phone) {
+    if (!prisma || !phone) {
+        console.log("getOrderHistory: No DB or phone", { hasDb: !!prisma, phone });
+        return null;
+    }
+
+    const normalizedPhone = normalizePhone(phone);
+    console.log("getOrderHistory: Querying for phone:", phone, "normalized:", normalizedPhone);
+
+    const buildResponse = (orders) => {
+        if (!orders || orders.length === 0) return null;
+        const orderSummary = orders.map(order =>
+            `- ${order.product} ($${order.total_amount}) on ${new Date(order.order_date).toLocaleDateString()}`
+        ).join('\n');
+
+        const totalSpent = orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
+
+        return {
+            summary: orderSummary,
+            totalSpent: totalSpent.toFixed(2),
+            count: orders.length
+        };
+    };
+
+    try {
+        const results = await prisma.order.findMany({
+            where: {
+                phone: {
+                    equals: normalizedPhone
                 }
-                
-                console.log("getOrderHistory: Results found (method 1):", results?.length || 0);
-                
-                if (results && results.length > 0) {
-                    const orderSummary = results.map(order => 
-                        `- ${order.product} ($${order.total_amount}) on ${new Date(order.order_date).toLocaleDateString()}`
-                    ).join('\n');
-                    
-                    const totalSpent = results.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
-                    
-                    const response = {
-                        summary: orderSummary,
-                        totalSpent: totalSpent.toFixed(2),
-                        count: results.length
-                    };
-                    console.log("getOrderHistory: Resolved with:", response);
-                    resolve(response);
-                    return;
-                }
-                
-                // Fallback: try direct phone match
-                console.log("getOrderHistory: No results with normalization, trying exact match with:", phone);
-                db.query(
-                    'SELECT product, total_amount, order_date FROM orders WHERE phone = ? ORDER BY order_date DESC LIMIT 5',
-                    [phone],
-                    (err2, results2) => {
-                        if (err2) {
-                            console.log("getOrderHistory: Database error on fallback query:", err2);
-                            resolve(null);
-                            return;
-                        }
-                        
-                        console.log("getOrderHistory: Results found (method 2 - exact match):", results2?.length || 0);
-                        
-                        if (results2 && results2.length > 0) {
-                            const orderSummary = results2.map(order => 
-                                `- ${order.product} ($${order.total_amount}) on ${new Date(order.order_date).toLocaleDateString()}`
-                            ).join('\n');
-                            
-                            const totalSpent = results2.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
-                            
-                            const response = {
-                                summary: orderSummary,
-                                totalSpent: totalSpent.toFixed(2),
-                                count: results2.length
-                            };
-                            console.log("getOrderHistory: Resolved with fallback:", response);
-                            resolve(response);
-                        } else {
-                            console.log("getOrderHistory: No orders found for phone:", phone);
-                            // Debug: show what phone formats exist in DB
-                            db.query('SELECT DISTINCT phone FROM orders LIMIT 5', [], (err3, samples) => {
-                                if (!err3 && samples) {
-                                    console.log("getOrderHistory: Sample phone formats in DB:", samples.map(s => s.phone));
-                                }
-                            });
-                            resolve(null);
-                        }
-                    }
-                );
+            },
+            orderBy: { order_date: 'desc' },
+            take: 5,
+            select: {
+                product: true,
+                total_amount: true,
+                order_date: true
             }
-        );
-    });
+        });
+
+        console.log("getOrderHistory: Results found (method 1):", results.length);
+        if (results.length > 0) return buildResponse(results);
+
+        console.log("getOrderHistory: No results with normalized phone, trying exact match with:", phone);
+        const fallbackResults = await prisma.order.findMany({
+            where: { phone },
+            orderBy: { order_date: 'desc' },
+            take: 5,
+            select: {
+                product: true,
+                total_amount: true,
+                order_date: true
+            }
+        });
+
+        console.log("getOrderHistory: Results found (method 2 - exact match):", fallbackResults.length);
+        return buildResponse(fallbackResults);
+    } catch (err) {
+        console.log("getOrderHistory: Database error:", err);
+        return null;
+    }
 }
 
 let disableAICallback = null;
@@ -198,36 +194,49 @@ function isOrderStatusInquiry(message) {
     return orderStatusKeywords.some(keyword => lowerMessage.includes(keyword));
 }
 
-function getOrderById(orderId) {
-    return new Promise((resolve) => {
-        if (!db || !orderId) {
-            resolve(null);
-            return;
-        }
+async function getOrderById(orderId) {
+    if (!prisma || !orderId) return null;
 
-        db.query(
-            `SELECT o.order_id, o.customer_name, o.items, COALESCE(o.total_amount, o.amount) AS total_amount,
-                    o.status AS order_status, o.order_date,
-                    d.delivery_status, d.rider_name, d.vehicle
-             FROM orders o
-             LEFT JOIN deliveries d ON o.id = d.order_id
-             WHERE o.order_id = ?
-             LIMIT 1`,
-            [orderId],
-            (err, results) => {
-                if (err) {
-                    console.log('getOrderById error:', err);
-                    resolve(null);
-                    return;
+    try {
+        const order = await prisma.order.findUnique({
+            where: { order_id: orderId },
+            select: {
+                order_id: true,
+                customer_name: true,
+                items: true,
+                total_amount: true,
+                amount: true,
+                status: true,
+                order_date: true,
+                deliveries: {
+                    select: {
+                        delivery_status: true,
+                        rider_name: true,
+                        vehicle: true
+                    },
+                    take: 1
                 }
-                if (!results || results.length === 0) {
-                    resolve(null);
-                    return;
-                }
-                resolve(results[0]);
             }
-        );
-    });
+        });
+
+        if (!order) return null;
+
+        const delivery = order.deliveries && order.deliveries.length > 0 ? order.deliveries[0] : {};
+        return {
+            order_id: order.order_id,
+            customer_name: order.customer_name,
+            items: order.items,
+            total_amount: order.total_amount ?? order.amount,
+            order_status: order.status,
+            order_date: order.order_date,
+            delivery_status: delivery.delivery_status,
+            rider_name: delivery.rider_name,
+            vehicle: delivery.vehicle
+        };
+    } catch (err) {
+        console.log('getOrderById error:', err);
+        return null;
+    }
 }
 
 function formatOrderStatusResponse(order) {
@@ -474,193 +483,226 @@ function isPositiveConfirmation(message) {
     return yesPhrases.some(phrase => lowerMessage.includes(phrase));
 }
 
-function getCustomerName(phone, conversationId) {
-    return new Promise((resolve) => {
-        if (!db) {
-            resolve('Unknown');
-            return;
-        }
+function detectTicketCategory(message) {
+    const lowerMessage = message.toLowerCase();
 
+    // Delivery Support: Late orders
+    const deliveryKeywords = [
+        'late', 'delayed', 'delay', 'slow', 'not arrived', 'waiting', 'ETA', 'estimated', 'delivery time', 'taking long', 'where is', 'not here', 'missing delivery', 'late delivery', 'delayed delivery',
+        'not here yet', 'where is my order', 'order is late', 'taking too long', 'delivery time', 'estimated time', 'arrived yet', 'here yet', 'arriving', 'delivery status'
+    ];
+    if (deliveryKeywords.some(keyword => lowerMessage.includes(keyword))) {
+        return 'Delivery Support';
+    }
+
+    // Refund Manager: Refunds
+    const refundKeywords = [
+        'refund', 'money back', 'return my money', 'cancel order', 'cancel my order', 'chargeback', 'refund request', 'back', 'return', 'cancel', 'charge back', 'want refund', 'need refund', 'get money back',
+        'return order', 'cancelled', 'cancellation', 'refunded', 'reimburse', 'compensation', 'credit', 'charge back', 'reverse charge', 'payment back'
+    ];
+    if (refundKeywords.some(keyword => lowerMessage.includes(keyword))) {
+        return 'Refund Manager';
+    }
+
+    // Kitchen Supervisor: Food quality (allergies, bad food, questions/complaints)
+    const kitchenKeywords = [
+        'allergy', 'allergic', 'bad food', 'food quality', 'tastes bad', 'spoiled', 'cold food', 'cold', 'wrong order', 'missing item', 'wrong item', 'food complaint', 'food issue', 'food problem', 'burnt', 'undercooked', 'overcooked',
+        'taste', 'smell', 'texture', 'wrong', 'missing', 'raw', 'soggy', 'dry', 'allergic reaction', 'food poisoning', 'sick', 'ill', 'nausea', 'vomit', 'diarrhea', 'stomach', 'quality issue', 'food safety'
+    ];
+    if (kitchenKeywords.some(keyword => lowerMessage.includes(keyword))) {
+        return 'Kitchen Supervisor';
+    }
+
+    // Customer Support: General complaints (cold food, etc.) - fallback for other complaints
+    const generalComplaintKeywords = [
+        'complaint', 'complain', 'issue', 'problem', 'not happy', 'dissatisfied', 'unhappy', 'angry', 'frustrated', 'terrible', 'awful', 'horrible', 'worst', 'help', 'support', 'error', 'bug', 'broken', 'stuck', 'failed', 'not working', 'doesn\'t work', 'won\'t work', 'glitch', 'crash', 'freeze',
+        'service', 'experience', 'dissatisfied', 'unpleasant', 'bad service', 'poor service', 'terrible service', 'awful experience', 'horrible experience', 'frustrating', 'annoying', 'disappointed'
+    ];
+    if (generalComplaintKeywords.some(keyword => lowerMessage.includes(keyword))) {
+        return 'Customer Support';
+    }
+
+    // Default to Customer Support for any other issues
+    return 'Customer Support';
+}
+
+function getTicketTypeByAssignee(assignee) {
+    switch (assignee) {
+        case 'Delivery Support':
+            return 'Delivery delay';
+        case 'Refund Manager':
+            return 'Refund';
+        case 'Kitchen Supervisor':
+            return 'Bad quality';
+        case 'Customer Support':
+            return 'General complaint';
+        default:
+            return 'Support request';
+    }
+}
+
+async function getCustomerName(phone, conversationId) {
+    if (!prisma) return 'Unknown';
+
+    try {
         if (conversationId) {
-            db.query('SELECT name FROM conversations WHERE id = ?', [conversationId], (err, results) => {
-                if (err || !results || results.length === 0) {
-                    resolve('Unknown');
-                } else {
-                    resolve(results[0].name || 'Unknown');
-                }
+            const convo = await prisma.conversation.findUnique({
+                where: { id: Number(conversationId) },
+                select: { name: true }
             });
-            return;
+            return convo?.name || 'Unknown';
         }
 
         if (phone) {
-            db.query('SELECT name FROM conversations WHERE phone = ? LIMIT 1', [phone], (err, results) => {
-                if (err || !results || results.length === 0) {
-                    resolve('Unknown');
-                } else {
-                    resolve(results[0].name || 'Unknown');
-                }
+            const convo = await prisma.conversation.findFirst({
+                where: { phone },
+                orderBy: { created_at: 'desc' },
+                select: { name: true }
             });
-            return;
+            return convo?.name || 'Unknown';
         }
+    } catch (err) {
+        console.log('getCustomerName error:', err);
+    }
 
-        resolve('Unknown');
-    });
+    return 'Unknown';
 }
 
 async function getRecentConversationMessages(conversationId, limit = 8) {
-    return new Promise((resolve) => {
-        if (!db || !conversationId) {
-            resolve([]);
-            return;
-        }
+    if (!prisma || !conversationId) return [];
 
-        db.query(
-            `SELECT sender, message, created_at FROM messages WHERE conversation_id = ? 
-             UNION ALL
-             SELECT sender, message, created_at FROM replies WHERE conversation_id = ? 
-             ORDER BY created_at DESC LIMIT ${Number(limit)}`,
-            [conversationId, conversationId],
-            (err, results) => {
-                if (err || !results) {
-                    console.log("getRecentConversationMessages error:", err);
-                    resolve([]);
-                    return;
-                }
-                resolve(results.reverse());
-            }
-        );
-    });
+    try {
+        const [messages, replies] = await Promise.all([
+            prisma.message.findMany({
+                where: { conversation_id: Number(conversationId) },
+                select: { sender: true, message: true, created_at: true },
+                orderBy: { created_at: 'desc' },
+                take: limit
+            }),
+            prisma.reply.findMany({
+                where: { conversation_id: Number(conversationId) },
+                select: { sender: true, message: true, created_at: true },
+                orderBy: { created_at: 'desc' },
+                take: limit
+            })
+        ]);
+
+        const combined = [...messages, ...replies].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        return combined.slice(-limit);
+    } catch (err) {
+        console.log("getRecentConversationMessages error:", err);
+        return [];
+    }
 }
 
-function formatTicketTime(now) {
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const month = monthNames[now.getMonth()];
-    const year = now.getFullYear();
-    return `${hours}:${minutes}, ${day} ${month} ${year}`;
-}
-
-async function createTicket(content, phone = null, conversationId = null) {
+async function createTicket(content, phone = null, conversationId = null, assignee = null, ticketType = null, priority = 'Medium', tags = []) {
     const customerName = await getCustomerName(phone, conversationId);
-    const submittedBy = 'AI';
     const now = new Date();
-    const formattedTime = formatTicketTime(now);
-    const safeReason = content.trim().replace(/\s+/g, ' ').replace(/"/g, "'");
-    const placeholderContent = `---------------------------------------------\nTicket ID: #TBD\nSubmitted by: ${submittedBy}\nCustomer name: ${customerName}\nTime: ${formattedTime}\nStatus: Open\nReason: "${safeReason}"\n---------------------------------------------`;
+    const status = 'Open';
+    const subject = ticketType || assignee || 'Support request';
+    const ticketTypeValue = ticketType || getTicketTypeByAssignee(assignee);
+    const tagsText = Array.isArray(tags) ? JSON.stringify(tags) : (tags || null);
 
-    return new Promise((resolve) => {
-        if (!db) {
-            console.log("createTicket: No database connection available");
-            resolve(null);
-            return;
-        }
+    if (!prisma) {
+        console.log("createTicket: No database connection available");
+        return null;
+    }
 
-        db.query("INSERT INTO tickets (content) VALUES (?)", [placeholderContent], (err, result) => {
-            if (err) {
-                console.log("createTicket: Database error:", err);
-                resolve(null);
-                return;
+    try {
+        const ticket = await prisma.ticket.create({
+            data: {
+                ticket_type: ticketTypeValue,
+                subject,
+                customer_name: customerName,
+                customer_phone: phone,
+                assignee,
+                priority,
+                status,
+                content,
+                tags: tagsText
             }
-
-            const ticketId = result.insertId;
-            const finalContent = `---------------------------------------------\nTicket ID: #${ticketId}\nSubmitted by: ${submittedBy}\nCustomer name: ${customerName}\nTime: ${formattedTime}\nStatus: Open\nReason: "${safeReason}"\n---------------------------------------------`;
-
-            db.query("UPDATE tickets SET content = ? WHERE id = ?", [finalContent, ticketId], (updateErr) => {
-                if (updateErr) {
-                    console.log("createTicket: Warning: failed to update ticket content with ID:", updateErr);
-                }
-
-                const ticket = {
-                    id: ticketId,
-                    content: finalContent,
-                    escalated: 0,
-                    created_at: now.toISOString()
-                };
-                resolve(ticket);
-            });
         });
-    });
+
+        return ticket;
+    } catch (err) {
+        console.log("createTicket: Database error:", err);
+        return null;
+    }
 }
 
 async function createOrderFromConversation(conversationId, phone) {
-    return new Promise(async (resolve) => {
-        if (!db || !conversationId) {
-            console.log("createOrderFromConversation: No DB or conversationId");
-            resolve(null);
-            return;
-        }
+    if (!prisma || !conversationId) {
+        console.log("createOrderFromConversation: No DB or conversationId");
+        return null;
+    }
 
-        // Get recent conversation messages to find the order details
-        const recentMessages = await getRecentConversationMessages(conversationId, 10);
-        
-        // Find the customer's order message and extract items
-        let orderDetails = null;
-        for (let i = recentMessages.length - 1; i >= 0; i--) {
-            const msg = recentMessages[i];
-            if (msg.sender === 'received' || msg.sender === 'customer') { // Customer message
-                const extracted = extractOrderItemsFromMessage(msg.message);
-                if (extracted.items && extracted.total > 0) {
-                    orderDetails = extracted;
-                    break;
-                }
+    const recentMessages = await getRecentConversationMessages(conversationId, 10);
+    let orderDetails = null;
+    for (let i = recentMessages.length - 1; i >= 0; i--) {
+        const msg = recentMessages[i];
+        if (msg.sender === 'received' || msg.sender === 'customer') {
+            const extracted = extractOrderItemsFromMessage(msg.message);
+            if (extracted.items && extracted.total > 0) {
+                orderDetails = extracted;
+                break;
             }
         }
+    }
 
-        if (!orderDetails) {
-            console.log("createOrderFromConversation: Could not find order details in conversation");
-            resolve(null);
-            return;
-        }
+    if (!orderDetails) {
+        console.log("createOrderFromConversation: Could not find order details in conversation");
+        return null;
+    }
 
-        // Get customer name
-        const customerName = await getCustomerName(phone, conversationId);
+    const customerName = await getCustomerName(phone, conversationId);
+    const orderId = `ORD-${Date.now()}`;
 
-        // Generate order ID
-        const orderId = `ORD-${Date.now()}`;
-
-        db.query(
-            'INSERT INTO orders (order_id, customer_name, phone, product, amount, total_amount, status, order_date, conversation_id) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?)',
-            [orderId, customerName, phone || null, orderDetails.items, orderDetails.total, orderDetails.total, 'confirmed', conversationId],
-            (err, result) => {
-                if (err) {
-                    console.log("createOrderFromConversation: Database error:", err);
-                    resolve(null);
-                    return;
-                }
-
-                const order = {
-                    id: result.insertId,
-                    orderId: orderId,
-                    product: orderDetails.items,
-                    total: orderDetails.total,
-                    status: 'confirmed'
-                };
-                console.log("createOrderFromConversation: Order created:", order);
-
-                // Automatically start the delivery simulation using the server route
-                fetch('http://localhost:3000/api/delivery/start', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ order_id: order.orderId })
-                }).then((response) => {
-                    if (!response.ok) {
-                        throw new Error('Delivery start failed');
-                    }
-                    return response.json();
-                }).then((data) => {
-                    console.log('createOrderFromConversation: Auto delivery simulation started for order', order.orderId, data);
-                }).catch((deliveryErr) => {
-                    console.error('createOrderFromConversation: Failed to auto-start delivery:', deliveryErr);
-                }).finally(() => {
-                    resolve(order);
-                });
+    try {
+        const createdOrder = await prisma.order.create({
+            data: {
+                order_id: orderId,
+                customer_name: customerName,
+                phone: phone || null,
+                product: orderDetails.items,
+                amount: orderDetails.total,
+                total_amount: orderDetails.total,
+                status: 'confirmed',
+                order_date: new Date(),
+                conversation_id: Number(conversationId)
             }
-        );
-    });
+        });
+
+        const order = {
+            id: createdOrder.id,
+            orderId,
+            product: createdOrder.product,
+            total: createdOrder.total_amount,
+            status: createdOrder.status
+        };
+        console.log("createOrderFromConversation: Order created:", order);
+
+        fetch('http://localhost:3000/api/delivery/start', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ order_id: order.orderId })
+        }).then((response) => {
+            if (!response.ok) {
+                throw new Error('Delivery start failed');
+            }
+            return response.json();
+        }).then((data) => {
+            console.log('createOrderFromConversation: Auto delivery simulation started for order', order.orderId, data);
+        }).catch((deliveryErr) => {
+            console.error('createOrderFromConversation: Failed to auto-start delivery:', deliveryErr);
+        });
+
+        return order;
+    } catch (err) {
+        console.log("createOrderFromConversation: Database error:", err);
+        return null;
+    }
 }
 
 async function getMistralReply(message, phone = null, conversationId = null) {
@@ -722,19 +764,21 @@ async function getMistralReply(message, phone = null, conversationId = null) {
         // Check if customer is requesting a ticket to be created
         if (ticketRequest) {
             console.log("Customer requested ticket creation. Attempting to create ticket.");
-            const ticket = await createTicket(message, phone, conversationId);
+            const assignee = detectTicketCategory(message);
+            const ticketType = getTicketTypeByAssignee(assignee);
+            const ticket = await createTicket(message, phone, conversationId, assignee, ticketType, 'Medium', ['auto-created']);
             if (ticket) {
-                return `A support ticket has been created for you as Ticket #${ticket.id}. I will continue helping you here while your request is recorded. Can you please tell me more about the problem or let me know what I can assist you with next?`;
+                return `A support ticket has been created for you as Ticket #${ticket.id} and assigned to our ${assignee} team. I will continue helping you here while your request is recorded. Can you please tell me more about the problem or let me know what I can assist you with next?`;
             }
             return "I've noted your request and a ticket will be created shortly. I'll continue helping you here in the meantime. Can you please tell me more about the problem or what I can assist you with next?";
         }
         
-        // Find relevant knowledge base entries
-        const relevantKB = findRelevantKB(message);
+        // Find relevant knowledge base entries (vector search when available)
+        const relevantKB = await findRelevantKB(message);
         let kbContext = "";
-        if (relevantKB.length > 0) {
+        if (relevantKB && relevantKB.length > 0) {
             kbContext = "\n\nRelevant knowledge base information:\n" + relevantKB.map(item => 
-                `Title: ${item.title || item.question}\nContent: ${item.content || item.answer}`
+                `Title: ${item.title || item.question}\nContent: ${item.content || item.answer || item.text}`
             ).join('\n\n');
         }
         
@@ -833,4 +877,4 @@ The customer appears to be placing an order but I couldn't identify the specific
     }
 }
 
-module.exports = { getMistralReply, initDatabase, setDisableAICallback, setHandoffCallback, isTicketCreationRequest, isRequestingStaff };
+export { getMistralReply, initDatabase, setDisableAICallback, setHandoffCallback, isTicketCreationRequest, isRequestingStaff, MENU_ITEMS, createTicket, detectTicketCategory };

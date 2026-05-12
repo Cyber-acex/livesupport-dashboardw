@@ -1,0 +1,79 @@
+/* Tracking page custom styles */
+:root{
+  --bg: #f6f8fb;
+  --card:#ffffff;
+  --muted:#6b7280;
+  --primary:#0b74ff;
+  --accent:#28a745;
+  --danger:#dc3545;
+  --glass: rgba(255,255,255,0.6);
+}
+
+html.dark-theme{
+  --bg:#0f1724;
+  --card:#111827;
+  --muted:#9ca3af;
+  --primary:#3b82f6;
+  --accent:#34d399;
+  --danger:#ef4444;
+  --glass: rgba(255,255,255,0.03);
+}
+
+/* Layout tweaks */
+.tracking-container{ background: var(--bg); padding:24px; }
+.tracking-main{ gap:16px; }
+.tracking-header{ align-items:center; gap:16px; }
+.tracking-header h1{ font-size:22px; color:var(--primary); margin:0; }
+
+/* Search bar and controls */
+.search-bar{ flex:1; display:flex; gap:8px; align-items:center; }
+.search-bar input{ padding:10px 12px; border-radius:8px; border:1px solid #e6edf8; background:var(--card); color:inherit; box-shadow:0 1px 2px rgba(16,24,40,0.04); }
+.search-bar button{ background:var(--primary); color:#fff; border:none; padding:10px 14px; border-radius:8px; cursor:pointer; font-weight:600; }
+.search-bar button:hover{ filter:brightness(.95); }
+
+/* Filters */
+#statusFilter, #riderFilter{ padding:8px 10px; border-radius:8px; border:1px solid #e6edf8; background:var(--card); }
+
+/* Map container */
+.map-container{ height:520px; border-radius:12px; overflow:hidden; box-shadow:0 8px 30px rgba(2,6,23,0.08); }
+#map{ height:100%; }
+.map-controls{ right:16px; top:16px; background:var(--card); padding:8px; border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,0.06); }
+.map-controls button{ background:transparent; color:var(--primary); border:1px solid rgba(11,116,255,0.12); padding:8px 10px; border-radius:8px; font-weight:700; cursor:pointer; }
+.map-controls button.stop{ background:var(--danger); color:#fff; border:none; }
+
+/* Deliveries panel */
+.deliveries-panel{ width:360px; display:flex; flex-direction:column; gap:0; }
+.panel-header{ padding:16px; font-weight:700; color:var(--primary); background:linear-gradient(90deg, rgba(11,116,255,0.06), transparent); border-bottom:1px solid rgba(11,116,255,0.03); }
+.deliveries-list{ padding:12px; overflow:auto; background:transparent; }
+.delivery-item{ background:var(--card); margin-bottom:10px; border-radius:10px; padding:12px; box-shadow:0 6px 16px rgba(2,6,23,0.04); transition:transform .12s ease, box-shadow .12s ease; display:block; }
+.delivery-item:hover{ transform:translateY(-3px); box-shadow:0 10px 30px rgba(2,6,23,0.08); }
+.delivery-item.active{ border-left:4px solid var(--primary); }
+.delivery-header{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.delivery-status{ font-size:11px; padding:4px 8px; border-radius:999px; text-transform:uppercase; }
+.delivery-info{ color:var(--muted); font-size:13px; margin-top:8px; }
+.delivery-info label{ color:inherit; font-weight:700; margin-right:6px; }
+
+/* small control buttons in item */
+.delivery-item button{ background:transparent; border:none; padding:6px 8px; border-radius:8px; cursor:pointer; font-weight:700; }
+.delivery-item button:hover{ background:rgba(11,116,255,0.06); }
+.delivery-item select{ padding:6px 8px; border-radius:8px; }
+
+/* Simulation controls */
+.simulation-controls{ padding:14px; border-top:1px solid rgba(11,116,255,0.03); display:flex; gap:10px; justify-content:space-between; }
+.simulation-controls button{ flex:1; padding:10px; border-radius:10px; border:none; cursor:pointer; font-weight:700; }
+.simulation-controls button:first-child{ background:var(--primary); color:#fff; }
+.simulation-controls .danger{ background:var(--danger); color:#fff; }
+
+/* Search result card */
+.search-result{ border-radius:8px; padding:12px; box-shadow:0 6px 18px rgba(2,6,23,0.04); }
+.search-result .search-result-header{ color:var(--primary); }
+
+/* responsive */
+@media (max-width:1200px){
+  .deliveries-panel{ width:100%; max-height:360px; }
+  .map-container{ height:420px; }
+}
+
+/* marker icon adjustments for better visibility */
+.rider-icon div{ transform:scale(1); box-shadow:0 6px 16px rgba(2,6,23,0.12); }
+.customer-icon div{ box-shadow:0 6px 16px rgba(2,6,23,0.08); }

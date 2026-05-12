@@ -14,6 +14,17 @@ function initTickets() {
 
     let ticketsData = [];
 
+    function saveNotification(message, source = 'Ticket', type = 'ticket') {
+        try {
+            const key = 'liveSupportNotifications';
+            const list = JSON.parse(localStorage.getItem(key) || '[]');
+            list.unshift({ message, source, type, time: new Date().toISOString() });
+            localStorage.setItem(key, JSON.stringify(list.slice(0, 25)));
+        } catch (e) {
+            console.error('Save notification failed', e);
+        }
+    }
+
     function showTicketNotification(message) {
         if (!ticketNotificationBar || !ticketNotificationText) return;
         ticketNotificationText.textContent = message;
@@ -22,6 +33,7 @@ function initTickets() {
         showTicketNotification.timeout = setTimeout(() => {
             ticketNotificationBar.style.display = "none";
         }, 5000);
+        saveNotification(message, 'Ticket', 'ticket');
     }
 
     function renderTicketElement(ticket) {
@@ -29,9 +41,15 @@ function initTickets() {
         div.classList.add("ticketItem");
         div.id = `ticket-${ticket.id}`;
 
+        const statusText = ticket.status ? ticket.status : 'Open';
+        const assigneeText = ticket.assignee ? `Assigned to: ${ticket.assignee}` : 'Unassigned';
         div.innerHTML = `
             <div class="ticket-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h4>Ticket #${ticket.id} (${new Date(ticket.created_at).toLocaleString()})</h4>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <h4 style="margin:0">Ticket #${ticket.id} (${new Date(ticket.created_at).toLocaleString()})</h4>
+                  <span class="status-badge" title="${statusText}" style="margin-left:8px;font-size:12px;padding:6px 8px;border-radius:999px;background:#eef2ff;color:#0f172a">${statusText}</span>
+                  <span class="assignee-badge" title="${assigneeText}" style="font-size:12px;padding:6px 8px;border-radius:999px;background:#dbeafe;color:#1e40af">${assigneeText}</span>
+                </div>
                 <div>
                     <button class="escalateBtn" style="background: red; color: white; border: none; padding: 5px 10px; margin-right: 5px;">Escalate</button>
                     <button class="printTicketBtn" style="background: blue; color: white; border: none; padding: 5px 10px;">Print</button>
@@ -113,6 +131,20 @@ function initTickets() {
                 if (escalatedLabel) escalatedLabel.style.display = "block";
             }
             showTicketNotification(`Ticket #${data.ticket_id} escalated!`);
+        }
+    });
+
+    socket.on("ticketResolved", (data) => {
+        const ticket = ticketsData.find(t => t.id === data.ticket_id);
+        if (ticket) {
+            ticket.status = 'Resolved';
+            const ticketElement = document.getElementById(`ticket-${ticket.id}`);
+            if (ticketElement) {
+                const statusEl = ticketElement.querySelector('.status-badge');
+                if (statusEl) { statusEl.textContent = 'Resolved'; statusEl.setAttribute('title','Resolved'); statusEl.style.background = '#bbf7d0'; statusEl.style.color = '#065f46'; }
+            }
+            if (data && data.resolved_by) showTicketNotification(`Ticket #${data.ticket_id} resolved by ${data.resolved_by}`);
+            else showTicketNotification(`Ticket #${data.ticket_id} marked resolved`);
         }
     });
 

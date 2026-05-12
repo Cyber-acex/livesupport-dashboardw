@@ -3,7 +3,9 @@
 let allOrders = [];
 let filteredOrders = [];
 let currentPage = 1;
-const ordersPerPage = 10;
+let ordersPerPage = 10;
+const selectedOrders = new Set();
+let currentSort = 'date_desc';
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
   loadStaffName();
@@ -88,6 +90,12 @@ async function loadOrders() {
     const response = await fetch('/api/orders');
     if (response.ok) {
       allOrders = await response.json();
+      // normalize amount and date fields for safety
+      allOrders = allOrders.map(o => ({
+        ...o,
+        amount: Number(o.amount || o.total || 0),
+        date: o.date || (o.created_at || o.createdAt) || new Date().toISOString()
+      }));
       filteredOrders = [...allOrders];
       displayOrders();
     } else {
@@ -155,28 +163,35 @@ function displayOrders() {
   }
   emptyState.style.display = 'none';
   // Pagination
-  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / ordersPerPage));
+  if (currentPage > totalPages) currentPage = totalPages;
   const startIndex = (currentPage - 1) * ordersPerPage;
   const endIndex = startIndex + ordersPerPage;
   const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
   // Build table rows
-  tbody.innerHTML = paginatedOrders.map(order => `
-    <tr>
+  tbody.innerHTML = paginatedOrders.map(order => {
+    const checked = selectedOrders.has(order.id) ? 'checked' : '';
+    const statusLabel = (order.status || '').toString();
+    const statusText = statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1);
+    const displayDate = (new Date(order.date)).toLocaleString();
+    return `
+    <tr data-order-id="${order.id}">
+      <td><input type="checkbox" class="row-select" ${checked} onchange="toggleSelectRow(event, '${order.id}')"></td>
       <td>
         <div class="order-id-cell">
           <span class="order-id" onclick="viewOrderDetails('${order.id}')">${order.id}</span>
           <button class="copy-order-btn" onclick="copyOrderId(event, '${order.id}')" aria-label="Copy order ID">📋</button>
         </div>
       </td>
-      <td>${order.customerName}</td>
-      <td>${order.product}</td>
-      <td>$${order.amount.toLocaleString('en-US')}</td>
+      <td>${order.customerName || ''}</td>
+      <td>${order.product || ''}</td>
+      <td>$${Number(order.amount || 0).toLocaleString('en-US')}</td>
       <td>
-        <span class="status-badge status-${order.status}">
-          ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+        <span class="status-badge status-${statusLabel}">
+          ${statusText}
         </span>
       </td>
-      <td>${order.date}</td>
+      <td>${displayDate}</td>
       <td>
         <div class="order-actions">
           <button class="action-btn view-btn" onclick="viewOrderDetails('${order.id}')">View</button>
@@ -185,7 +200,8 @@ function displayOrders() {
         </div>
       </td>
     </tr>
-  `).join('');
+    `;
+  }).join('');
   // Build pagination
   const paginationDiv = document.getElementById('pagination');
   paginationDiv.innerHTML = '';
@@ -229,8 +245,8 @@ function applyFilters() {
   const dateFilter = document.getElementById('dateFilter').value;
   filteredOrders = allOrders.filter(order => {
     // Search filter
-    const matchesSearch = order.id.toLowerCase().includes(searchText) || 
-                         order.customerName.toLowerCase().includes(searchText);
+    const matchesSearch = (order.id || '').toString().toLowerCase().includes(searchText) || 
+                         (order.customerName || '').toString().toLowerCase().includes(searchText);
     // Status filter
     const matchesStatus = !statusFilter || order.status === statusFilter;
     // Date filter
@@ -253,6 +269,8 @@ function applyFilters() {
     return matchesSearch && matchesStatus && matchesDate;
   });
   currentPage = 1;
+  // apply sorting after filtering
+  sortArray(filteredOrders, currentSort);
   displayOrders();
 }
 // Clear filters
@@ -309,9 +327,59 @@ async function handleCreateOrder(event) {
 }
 // View order details
 function viewOrderDetails(orderId) {
+  openOrderModal(orderId);
+}
+
+// Open view/edit modal
+function openOrderModal(orderId) {
   const order = allOrders.find(o => o.id === orderId);
-  if (order) {
-    alert(`Order Details:\n\nID: ${order.id}\nCustomer: ${order.customerName}\nProduct: ${order.product}\nAmount: $${order.amount.toLocaleString('en-US')}\nStatus: ${order.status}\nDate: ${order.date}`);
+  if (!order) return showNotification('Order not found');
+  document.getElementById('view_order_id').value = order.id;
+  document.getElementById('view_customerName').value = order.customerName || '';
+  document.getElementById('view_product').value = order.product || '';
+  document.getElementById('view_amount').value = Number(order.amount || 0).toFixed(2);
+  document.getElementById('view_status').value = order.status || 'pending';
+  document.getElementById('view_date').value = new Date(order.date).toLocaleString();
+  document.getElementById('orderViewModal').style.display = 'flex';
+}
+
+function closeOrderViewModal() {
+  document.getElementById('orderViewModal').style.display = 'none';
+  document.getElementById('orderViewForm').reset();
+}
+
+async function saveOrderChanges(event) {
+  event.preventDefault();
+  const id = document.getElementById('view_order_id').value;
+  const customerName = document.getElementById('view_customerName').value;
+  const product = document.getElementById('view_product').value;
+  const amount = parseFloat(document.getElementById('view_amount').value) || 0;
+  const status = document.getElementById('view_status').value;
+  try {
+    const res = await fetch(`/api/orders/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ customerName, product, amount, status })
+    });
+    if (res.ok) {
+      // update local copy
+      const order = allOrders.find(o => o.id === id);
+      if (order) {
+        order.customerName = customerName;
+        order.product = product;
+        order.amount = amount;
+        order.status = status;
+      }
+      showNotification('Order updated');
+      closeOrderViewModal();
+      displayOrders();
+    } else {
+      const err = await res.json().catch(()=>({}));
+      alert('Failed to save: ' + (err.error || res.statusText));
+    }
+  } catch (e) {
+    console.error('Save order error', e);
+    alert('Error saving order');
   }
 }
 function copyOrderId(event, orderId) {
@@ -324,6 +392,95 @@ function copyOrderId(event, orderId) {
       console.error('Copy failed:', error);
       alert('Unable to copy order ID.');
     });
+}
+// Toggle select all
+function toggleSelectAll(checkbox) {
+  const rows = document.querySelectorAll('.row-select');
+  rows.forEach(r => {
+    r.checked = checkbox.checked;
+    const id = r.closest('tr')?.getAttribute('data-order-id');
+    if (checkbox.checked && id) selectedOrders.add(id);
+    if (!checkbox.checked && id) selectedOrders.delete(id);
+  });
+}
+function toggleSelectRow(event, orderId) {
+  event.stopPropagation();
+  if (event.target.checked) selectedOrders.add(orderId);
+  else selectedOrders.delete(orderId);
+  // sync header checkbox
+  const allRow = document.querySelectorAll('.row-select');
+  const checked = document.querySelectorAll('.row-select:checked');
+  document.getElementById('selectAllCheckbox').checked = allRow.length === checked.length;
+}
+
+function applyBulkAction() {
+  const action = document.getElementById('bulkActionSelect').value;
+  if (!action) return showNotification('Select a bulk action first');
+  if (selectedOrders.size === 0) return showNotification('No orders selected');
+  const ids = Array.from(selectedOrders);
+  if (action === 'mark_completed') {
+    ids.forEach(id => {
+      const o = allOrders.find(x => x.id === id);
+      if (o) o.status = 'completed';
+    });
+    // send batch update to server if available
+    fetch('/api/orders/bulk', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ids, status:'completed'})}).catch(()=>{});
+    showNotification(`Marked ${ids.length} orders completed`);
+  } else if (action === 'cancel') {
+    if (!confirm(`Cancel ${ids.length} orders?`)) return;
+    ids.forEach(id => {
+      const o = allOrders.find(x => x.id === id);
+      if (o) o.status = 'cancelled';
+    });
+    fetch('/api/orders/bulk', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ids, status:'cancelled'})}).catch(()=>{});
+    showNotification(`Cancelled ${ids.length} orders`);
+  }
+  // clear selection after action
+  selectedOrders.clear();
+  document.getElementById('selectAllCheckbox').checked = false;
+  displayOrders();
+}
+
+function exportCSV() {
+  if (filteredOrders.length === 0) return showNotification('No orders to export');
+  const rows = filteredOrders.map(o => ({
+    id: o.id,
+    customerName: o.customerName,
+    product: o.product,
+    amount: o.amount,
+    status: o.status,
+    date: o.date
+  }));
+  const csv = [Object.keys(rows[0]).join(',')].concat(rows.map(r => Object.values(r).map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','))).join('\n');
+  const blob = new Blob([csv], {type: 'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `orders-export-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function setPerPage(val) {
+  ordersPerPage = Number(val) || 10;
+  currentPage = 1;
+  displayOrders();
+}
+
+function sortOrders(val) {
+  currentSort = val;
+  sortArray(filteredOrders, val);
+  displayOrders();
+}
+
+function sortArray(arr, val) {
+  if (!arr || !arr.sort) return;
+  if (val === 'date_desc') arr.sort((a,b)=> new Date(b.date) - new Date(a.date));
+  else if (val === 'date_asc') arr.sort((a,b)=> new Date(a.date) - new Date(b.date));
+  else if (val === 'amount_desc') arr.sort((a,b)=> Number(b.amount) - Number(a.amount));
+  else if (val === 'amount_asc') arr.sort((a,b)=> Number(a.amount) - Number(b.amount));
 }
 // Mark order completed
 function editOrder(orderId) {

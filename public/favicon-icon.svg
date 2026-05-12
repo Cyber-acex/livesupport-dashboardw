@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="Cyber Support favicon">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <!-- outer blue circle -->
+  <circle cx="128" cy="78" r="66" fill="#0a66ff" />
+
+  <!-- simplified microphone / headset icon (white) -->
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="10" transform="translate(0,0)">
+    <!-- headband arc -->
+    <path d="M88 78 A40 40 0 0 1 168 78" fill="none" stroke="#ffffff" stroke-width="12" />
+    <!-- left earcup -->
+    <rect x="64" y="96" width="26" height="34" rx="6" fill="#ffffff" stroke="none" />
+    <!-- right earcup -->
+    <rect x="166" y="96" width="26" height="34" rx="6" fill="#ffffff" stroke="none" />
+    <!-- mic stalk -->
+    <path d="M170 118 q28 10 28 22 q0 8 -12 8" fill="none" stroke="#ffffff" stroke-width="6" />
+    <circle cx="202" cy="150" r="4" fill="#ffffff" stroke="none" />
+  </g>
+
+  <!-- Text: placed below the circle for larger view (will be invisible in tiny favicons but included per request) -->
+  <text x="128" y="168" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="20" fill="#0a66ff">Cyber Support</text>
+  <text x="128" y="188" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="400" font-size="10" fill="#0a66ff">Smart and real solution</text>
+</svg>

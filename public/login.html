@@ -2,122 +2,238 @@
 <html lang="en">
 
 <head>
-<link rel="stylesheet" href="./css/style.css">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LiveSupport Login</title>
-<script>
-  // Apply theme from localStorage immediately to prevent flash
-  (function applyThemeImmediately() {
-    const theme = localStorage.getItem('theme') || 'Light';
-    document.documentElement.dataset.theme = theme;
-    document.documentElement.classList.toggle('dark-theme', theme === 'Dark');
-  })();
-</script>
-
-<style>
-
-body{
-    font-family: Arial, sans-serif;
-    background:#f4f6f9;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-}
-
-.login-box{
-    background:white;
-    padding:40px;
-    width:350px;
-    border-radius:8px;
-    box-shadow:0 5px 15px rgba(0,0,0,0.1);
-}
-
-h2{
-    text-align:center;
-    margin-bottom:20px;
-}
-
-input{
-    width:100%;
-    padding:10px;
-    margin-top:10px;
-    border:1px solid #ccc;
-    border-radius:4px;
-}
-
-button{
-    width:100%;
-    margin-top:20px;
-    padding:10px;
-    border:none;
-    background:#2f6fed;
-    color:white;
-    font-size:16px;
-    border-radius:4px;
-    cursor:pointer;
-}
-
-button:hover{
-    background:#2455b6;
-}
-
-#errorBox {
-    display: none;
-    background: #ffebee;
-    color: #c62828;
-    padding: 10px;
-    border-radius: 4px;
-    border: 1px solid #ef5350;
-    position: fixed;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: fit-content;
-    text-align: center;
-    font-weight: bold;
-    z-index: 1000;
-}
-
-</style>
-
+        <link rel="icon" href="/favicon-icon.svg" type="image/svg+xml">
+        <link rel="shortcut icon" href="/favicon-icon.svg">
+        <link rel="stylesheet" href="./css/style.css">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>LiveSupport — Secure Login</title>
+        <script>
+            (function applyThemeImmediately() {
+                const theme = localStorage.getItem('theme') || 'Light';
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.classList.toggle('dark-theme', theme === 'Dark');
+            })();
+        </script>
+        <style>
+            /* Minimal inline to avoid flash of unstyled content for the login card */
+            html,body{height:100%;margin:0}
+            body{font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;}
+        </style>
 </head>
 
 <body>
 
-<div class="login-box">
+<main class="advanced-login">
+    <div class="login-visual">
+        <div class="brand">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="2" y="2" width="20" height="20" rx="5" fill="url(#g)" />
+                <defs>
+                    <linearGradient id="g" x1="0" x2="1">
+                        <stop offset="0" stop-color="#38bdf8"/>
+                        <stop offset="1" stop-color="#8b5cf6"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <h1 class="title">LiveSupport</h1>
+            <p class="tag">Real-time support dashboard — secure access</p>
+        </div>
+        <ul class="features">
+            <li>• Multi-channel inbox</li>
+            <li>• AI suggestions</li>
+            <li>• Real-time performance</li>
+        </ul>
+    </div>
 
-<h2>LiveSupport</h2>
+    <section class="login-form-card" aria-labelledby="login-heading">
+        <div class="card-top">
+            <h2 id="login-heading">Sign in to your account</h2>
+            <div class="theme-toggle" title="Toggle theme" role="button" tabindex="0" aria-pressed="false">
+                <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/></svg>
+                <svg class="moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+            </div>
+        </div>
 
-<form action="/login" method="POST">
+        <form action="/login" method="POST" class="login-form" autocomplete="on">
+            <label class="field">
+                <span class="label-text">Email</span>
+                <input type="email" name="email" placeholder="you@company.com" required>
+            </label>
 
-<input type="email" name="email" placeholder="Email" required>
+            <label class="field">
+                <span class="label-text">Password</span>
+                <div class="password-wrap">
+                    <input id="password" type="password" name="password" placeholder="Enter password" required>
+                    <button type="button" class="pw-toggle" aria-label="Show password" title="Show password">👁</button>
+                </div>
+            </label>
 
-<input type="password" name="password" placeholder="Password" required>
+            <div class="options-row">
+                <label class="remember"><input type="checkbox" name="remember"> Remember me</label>
+                <a class="forgot" href="#">Forgot?</a>
+            </div>
 
-<button type="submit">Login</button>
+            <button class="submit" type="submit">Secure Sign in</button>
 
-<div id="errorBox"></div>
+            <div class="divider"><span>or</span></div>
 
-</form>
+            <div class="socials">
+                <button type="button" class="social google" aria-label="Sign in with Google">
+                    <span class="google-logo" aria-hidden="true">
+                        <svg viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg" focusable="false" role="img">
+                            <path d="M533.5 278.4c0-17.4-1.5-34.2-4.3-50.4H272v95.5h147.3c-6.3 34-25.1 62.8-53.6 82l86.4 67.1c50.5-46.6 82.4-115.3 82.4-194.2z" fill="#4285F4"/>
+                            <path d="M272 544.3c72.6 0 133.7-24.1 178.3-65.2l-86.4-67.1c-24.1 16.2-55 25.8-91.9 25.8-70.6 0-130.3-47.6-151.7-111.7H27.3v70.3C71.2 486.9 166.5 544.3 272 544.3z" fill="#34A853"/>
+                            <path d="M120.3 323.1c-10.6-31.8-10.6-66.1 0-97.9V154.9H27.3C-4.8 201.7-4.8 310.6 27.3 354.7l93-31.6z" fill="#FBBC05"/>
+                            <path d="M272 107.3c38.6-.6 75.6 13.6 103.7 39.2l77.6-77.6C401.2 24.1 340.1 0 272 0 166.5 0 71.2 57.4 27.3 154.9l93 31.6C141.7 154.9 201.4 107.3 272 107.3z" fill="#EA4335"/>
+                        </svg>
+                    </span>
+                    <span>Sign in with Google</span>
+                </button>
+                <button type="button" class="social microsoft" aria-label="Sign in with Microsoft">
+                    <span class="ms-logo" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" focusable="false" role="img">
+                            <rect x="1" y="1" width="10.5" height="10.5" fill="#f35325"/>
+                            <rect x="12.5" y="1" width="10.5" height="10.5" fill="#81bc06"/>
+                            <rect x="1" y="12.5" width="10.5" height="10.5" fill="#05a6f0"/>
+                            <rect x="12.5" y="12.5" width="10.5" height="10.5" fill="#ffba00"/>
+                        </svg>
+                    </span>
+                    <span>Microsoft</span>
+                </button>
+            </div>
 
-</div>
+            <div id="errorBox" class="hidden" role="alert" aria-live="assertive"></div>
+        </form>
+
+        <footer class="login-foot">By signing in you agree to the <a href="#">Terms</a>.</footer>
+    </section>
+</main>
 
 <script>
-window.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    const errorBox = document.getElementById("errorBox");
+    // Password toggle
+    document.addEventListener('click', e => {
+        if (e.target.matches('.pw-toggle')) {
+            const inp = document.getElementById('password');
+            if (inp.type === 'password') { inp.type = 'text'; e.target.textContent = '🔒'; }
+            else { inp.type = 'password'; e.target.textContent = '👁'; }
+        }
+    });
 
-    if (params.get("error") === "invalid") {
-        errorBox.innerHTML = "<marquee>🚫 Staff not recognized. Please check your credentials.</marquee>";
-        errorBox.style.display = "block";
+    // Theme toggle
+    const themeToggle = document.querySelector('.theme-toggle');
+    if (themeToggle) {
+        const reflect = () => {
+            const current = document.documentElement.dataset.theme || 'Light';
+            themeToggle.setAttribute('aria-pressed', current === 'Dark');
+        };
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.dataset.theme === 'Dark';
+            const next = isDark ? 'Light' : 'Dark';
+            document.documentElement.dataset.theme = next;
+            document.documentElement.classList.toggle('dark-theme', next === 'Dark');
+            localStorage.setItem('theme', next);
+            reflect();
+        });
+        themeToggle.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') themeToggle.click(); });
+        reflect();
     }
-});
+
+    // Show server errors if present
+    window.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const errorBox = document.getElementById('errorBox');
+        if (params.get('error') === 'invalid') {
+            errorBox.textContent = '🚫 Invalid credentials — please try again.';
+            errorBox.classList.remove('hidden');
+            errorBox.classList.add('show');
+            setTimeout(()=> errorBox.classList.remove('show'), 6000);
+        }
+    });
 </script>
 
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+        // Google client ID is fetched from the server so you don't need to hardcode it in the HTML
+        let GOOGLE_CLIENT_ID = null;
+        async function fetchGoogleConfig(){
+            try{
+                const r = await fetch('/auth/config');
+                if (r.ok){
+                    const j = await r.json();
+                    GOOGLE_CLIENT_ID = j.googleClientId || null;
+                } else {
+                    // show a helpful error message when server says client not configured
+                    try{ const j = await r.json(); if (j && j.error === 'google_client_not_configured') showError('Google client not configured on server. Set GOOGLE_CLIENT_ID in .env and restart.'); } catch(e){}
+                }
+            } catch (e){
+                console.warn('Failed to fetch /auth/config', e);
+            }
+            // attempt init after fetching config
+            initGoogleClient();
+        }
 
+    // Init the code client for the Authorization Code flow with PKCE.
+    // This returns an authorization code which your server must exchange for tokens.
+    let googleCodeClient;
+    function initGoogleClient(){
+        if (!window.google || !GOOGLE_CLIENT_ID) return;
+        try {
+            googleCodeClient = google.accounts.oauth2.initCodeClient({
+                client_id: GOOGLE_CLIENT_ID,
+                scope: 'openid email profile',
+                ux_mode: 'popup',
+                callback: (resp) => {
+                    if (resp && resp.code) handleGoogleCode(resp.code);
+                    else showError('Google sign-in failed');
+                }
+            });
+        } catch (e){
+            console.warn('Google client init error', e);
+        }
+    }
+
+    function showError(msg){
+        const errorBox = document.getElementById('errorBox');
+        if (!errorBox) return;
+        errorBox.textContent = msg;
+        errorBox.classList.remove('hidden');
+        errorBox.classList.add('show');
+        setTimeout(()=> errorBox.classList.remove('show'), 6000);
+    }
+
+    async function handleGoogleCode(code){
+        try{
+            const res = await fetch('/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+            });
+            if (!res.ok) throw new Error('Server rejected Google login');
+            const data = await res.json();
+            // On success, server should reply with session info / redirect URL
+            if (data && data.redirect) window.location = data.redirect;
+            else window.location = '/';
+        } catch (err){
+            showError(err.message || 'Google sign-in error');
+            console.error(err);
+        }
+    }
+
+    // Attach click handler to Google button
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.social.google')){
+            // ensure client initialized
+            if (!googleCodeClient) initGoogleClient();
+            if (!googleCodeClient){ showError('Google client not configured'); return; }
+            googleCodeClient.requestCode();
+        }
+    });
+
+    // Initialize once script loads (fetch client id then init)
+    window.addEventListener('load', () => setTimeout(fetchGoogleConfig, 300));
+</script>
 
 </body>
 

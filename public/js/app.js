@@ -1,7 +1,27 @@
 if (window.inboxAppLoaded) {
     console.log('Dashboard fallback app.js skipped because inbox.js is active');
 } else {
-    const socket = io("http://localhost:3000");
+    // Utility function to escape HTML
+    function escapeHtml(s){ if(!s) return ''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function saveSharedNotification(message, source = 'Staff', type = 'staff') {
+        try {
+            const key = 'liveSupportNotifications';
+            const list = JSON.parse(localStorage.getItem(key) || '[]');
+            list.unshift({ message, source, type, time: new Date().toISOString() });
+            localStorage.setItem(key, JSON.stringify(list.slice(0, 25)));
+        } catch (e) {
+            console.error('Shared notification save failed', e);
+        }
+    }
+
+    const socket = io();
+    // Register this client as an agent for presence/broadcasts
+    socket.on('connect', () => {
+        fetch('/api/user').then(r=>r.json()).then(u=>{
+            if(u && (u.id || u.name)) socket.emit('agent:register', { userId: u.id, name: u.name || u.role || 'Agent', role: u.role || 'agent' });
+        }).catch(()=>{});
+    });
     const aiSendBtn = document.getElementById("ai-send");
     const aiText = document.getElementById("ai-text");
     const chatMessages = document.getElementById("chat-messages");
@@ -121,6 +141,48 @@ socket.on("newMessage", function (data) {
 
 });
 
+// Show staff notifications broadcast from other agents
+socket.on('staffNotification', (data) => {
+    try{
+        const message = data && data.message ? data.message : '';
+        const from = data && data.from ? data.from : 'Staff';
+        // Store the last notification in localStorage
+        const lastNotification = { message, from, time: data.time || new Date().toISOString() };
+        localStorage.setItem('lastStaffNotification', JSON.stringify(lastNotification));
+        saveSharedNotification(message, from, 'staff');
+        // create a fixed notification element
+        const id = 'globalStaffNotificationBar';
+        let el = document.getElementById(id);
+        if(!el){
+            el = document.createElement('div');
+            el.id = id;
+            el.style.position = 'fixed';
+            el.style.top = '12px';
+            el.style.left = '50%';
+            el.style.transform = 'translateX(-50%)';
+            el.style.zIndex = '99999';
+            el.style.maxWidth = '900px';
+            el.style.width = 'calc(100% - 40px)';
+            el.style.padding = '12px 16px';
+            el.style.borderRadius = '8px';
+            el.style.boxShadow = '0 6px 18px rgba(2,6,23,0.08)';
+            el.style.fontSize = '14px';
+            el.style.display = 'flex';
+            el.style.alignItems = 'center';
+            el.style.justifyContent = 'space-between';
+            el.style.gap = '12px';
+            document.body.appendChild(el);
+        }
+        el.style.background = '#0ea5a4';
+        el.style.color = 'white';
+        el.innerHTML = `<div style="flex:1">${escapeHtml ? escapeHtml(from) : from}: ${escapeHtml ? escapeHtml(message) : message}</div><button id="globalNotifyClose" style="background:transparent;border:none;color:white;font-size:18px;cursor:pointer">&times;</button>`;
+        const closeBtn = document.getElementById('globalNotifyClose');
+        if(closeBtn) closeBtn.onclick = () => { el.style.display = 'none'; };
+        el.style.display = 'flex';
+        setTimeout(()=>{ try{ el.style.display='none'; }catch(e){} }, 6000);
+    }catch(e){ console.error('staffNotification handler error', e); }
+});
+
 app.post("/tickets", (req, res) => {
     const { user_id, source, message, priority } = req.body;
     const sql = "INSERT INTO tickets (user_id, source, message, priority) VALUES (?, ?, ?, ?)";
@@ -132,7 +194,7 @@ app.post("/tickets", (req, res) => {
 
 // show messages in sidebar
 async function loadConversations() {
-    const res = await fetch("http://localhost:3000/conversations");
+    const res = await fetch("/conversations");
     const conversations = await res.json();
 
     const sidebar = document.querySelector(".chat-list");

@@ -1,0 +1,836 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Menu & Tables Pro</title>
+  <link rel="icon" href="/favicon-icon.svg" type="image/svg+xml">
+  <link rel="shortcut icon" href="/favicon-icon.svg">
+  <script>document.documentElement.classList.add('ls-js');</script>
+  <script src="./js/user.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/sidebar.css">
+  <style>
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      width: 100%;
+      overflow-x: hidden;
+      background: #f7f8fc;
+      color: #111827;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    body.dark-theme {
+      background: #111827;
+      color: #f8fafc;
+    }
+
+    .dashboard {
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      position: relative;
+    }
+
+    .sidebar {
+      width: 240px !important;
+    }
+
+    .main {
+      flex: 1;
+      margin-left: 240px;
+      min-height: 100vh;
+      padding: 28px 32px 40px;
+      box-sizing: border-box;
+      background: transparent;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+      background: transparent;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(14px);
+    }
+
+    .branch {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+      color: #475569;
+    }
+
+    .branch strong {
+      color: #0f172a;
+    }
+
+    .content {
+      background: #ffffff;
+      border-radius: 28px;
+      box-shadow: 0 24px 80px rgba(15, 23, 42, 0.06);
+      padding: 32px;
+      min-height: calc(100vh - 108px);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .page-header {
+      display: grid;
+      gap: 16px;
+    }
+
+    .page-title {
+      font-size: clamp(2rem, 2.6vw, 2.8rem);
+      margin: 0;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      max-width: 780px;
+    }
+
+    .hero-copy {
+      color: #475569;
+      font-size: 1rem;
+      max-width: 760px;
+      line-height: 1.75;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(220px, 1fr);
+      gap: 16px;
+      align-items: center;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      width: 100%;
+      box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .search-box input {
+      border: none;
+      outline: none;
+      background: transparent;
+      width: 100%;
+      font-size: 1rem;
+      color: inherit;
+    }
+
+    .search-box .hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #4338ca;
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .toolbar button,
+    .toolbar select {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      padding: 12px 14px;
+      font-size: 0.97rem;
+      color: #0f172a;
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .toolbar button:hover,
+    .toolbar select:hover {
+      border-color: #c7d2fe;
+      box-shadow: 0 12px 30px rgba(99, 102, 241, 0.1);
+    }
+
+    .toolbar button.primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      border-color: transparent;
+    }
+
+    .dashboard-widgets {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 14px;
+    }
+
+    .widget {
+      background: #f8fafc;
+      border-radius: 18px;
+      border: 1px solid #e2e8f0;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 104px;
+    }
+
+    .widget strong {
+      font-size: 1.5rem;
+      display: block;
+    }
+
+    .widget span {
+      color: #475569;
+      font-size: 0.9rem;
+    }
+
+    .tabs-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 6px 0 0;
+    }
+
+    .tab-pill {
+      border-radius: 999px;
+      border: 1px solid #c7d2fe;
+      background: #eef2ff;
+      color: #3730a3;
+      padding: 10px 16px;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .tab-pill.active,
+    .tab-pill:hover {
+      background: #6366f1;
+      border-color: #6366f1;
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    .category-carousel {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-top: 6px;
+      scrollbar-width: thin;
+      scrollbar-color: #c7d2fe transparent;
+    }
+
+    .category-carousel::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .category-carousel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .category-carousel::-webkit-scrollbar-thumb {
+      background: #c7d2fe;
+      border-radius: 999px;
+    }
+
+    .category-chip {
+      flex: 0 0 auto;
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+      color: #1d4ed8;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .category-chip.active {
+      background: #4338ca;
+      border-color: #4338ca;
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      width: 100%;
+    }
+
+    .menu-card {
+      background: #ffffff;
+      border-radius: 24px;
+      border: 1px solid #e2e8f0;
+      padding: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 380px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 28px 80px rgba(15, 23, 42, 0.12);
+    }
+
+    .menu-card-hero {
+      position: relative;
+      min-height: 170px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #eef2ff, #c7d2fe);
+    }
+
+    .menu-card-hero span {
+      font-size: 4rem;
+      transform: translateY(-4px);
+    }
+
+    .menu-card-body {
+      padding: 22px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .menu-card-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .badge {
+      background: #eef2ff;
+      color: #3730a3;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 8px 12px;
+      border-radius: 999px;
+    }
+
+    .menu-card-title {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .menu-card-copy {
+      margin: 0;
+      color: #475569;
+      font-size: 0.95rem;
+      line-height: 1.7;
+      min-height: 66px;
+    }
+
+    .menu-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: auto;
+    }
+
+    .menu-price {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #4338ca;
+    }
+
+    .menu-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .button {
+      border-radius: 14px;
+      border: 1px solid transparent;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      font-weight: 700;
+      font-size: 0.94rem;
+    }
+
+    .button.secondary {
+      background: #f8fafc;
+      color: #334155;
+      border-color: #e2e8f0;
+    }
+
+    .button.primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 24px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 600px;
+      background: white;
+      border-radius: 26px;
+      padding: 28px;
+      box-shadow: 0 40px 120px rgba(15, 23, 42, 0.16);
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      position: absolute;
+      right: 24px;
+      top: 24px;
+      color: #0f172a;
+    }
+
+    .modal-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .modal-grid strong {
+      font-size: 0.95rem;
+      color: #475569;
+    }
+
+    .modal-grid p {
+      margin: 8px 0 0;
+      color: #334155;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 1040px) {
+      .main {
+        margin-left: 0;
+        padding: 20px;
+      }
+
+      .toolbar,
+      .controls-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .category-carousel {
+        gap: 8px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .sidebar {
+        position: fixed !important;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        width: 100%;
+        z-index: 3000;
+      }
+
+      .main {
+        margin-left: 0;
+        padding-top: 100px;
+      }
+
+      .topbar {
+        position: relative;
+        border-bottom: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <aside class="sidebar">
+      <div class="side-brand">
+        <svg viewBox="0 0 24 24" class="logo" aria-hidden><circle cx="12" cy="12" r="10"/></svg>
+        <div>
+          <div class="app">LiveSupport</div>
+          <div class="sub">Support Console</div>
+        </div>
+      </div>
+      <nav class="menu">
+        <a href="./dashboard.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg><span class="nav-label">Dashboard</span></a>
+        <a href="./tickets.html"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 7V4H4v3H2v10h18V7h-0zM6 6h12v2H6V6zm12 10H6v-6h12v6z"/></svg><span class="nav-label">Tickets</span></a>
+        <a href="./staff-performance.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 9h3v11H5zM10 4h3v16h-3zM15 13h3v7h-3z"/></svg><span class="nav-label">Staff Performance</span></a>
+        <a href="./analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 17h2V9H3v8zm4 0h2V3H7v14zm4 0h2v-6h-2v6zm4 0h2v-9h-2v9z"/></svg><span class="nav-label">Analytics</span></a>
+        <a href="./knowledge.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7v6c0 5 4 9 10 9s10-4 10-9V7l-10-5zM12 4.4L18.6 8 12 11.6 5.4 8 12 4.4z"/></svg><span class="nav-label">Knowledge Base</span></a>
+        <a href="./learning.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a7 7 0 00-7 7c0 3.87 3.13 7 7 7s7-3.13 7-7a7 7 0 00-7-7zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg><span class="nav-label">AI Learning</span></a>
+        <a href="./menu.html" class="active"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg><span class="nav-label">Menu</span></a>
+        <a href="./orders.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2zM7.16 14l.84-2h7.45l1.24 3H7.16zM7.6 6h10.8l-1.2 3H8.8L7.6 6z"/></svg><span class="nav-label">Orders</span></a>
+        <a href="./tracking.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a4 4 0 100 8 4 4 0 000-8zm0-6c-6.6 0-12 5.4-12 12 0 3.6 1.6 6.8 4.2 9l.8-2.6C4.1 19.1 3 16.6 3 14 3 8.5 7.6 4 13 4s10 4.5 10 10c0 2.6-1.1 5.1-2.9 6.4L21 23c2.6-2.2 4-5.4 4-9 0-6.6-5.4-12-12-12z"/></svg><span class="nav-label">Tracking</span></a>
+        <a href="./instagram.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 2h10a5 5 0 015 5v10a5 5 0 01-5 5H7a5 5 0 01-5-5V7a5 5 0 015-5zm5 6a5 5 0 100 10 5 5 0 000-10zm4-3a1 1 0 110 2 1 1 0 010-2z"/></svg><span class="nav-label">Instagram</span></a>
+        <a href="./settings.html"><svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.14 12.94a7.89 7.89 0 000-1.88l2.03-1.58-2-3.46-2.39.96a8.1 8.1 0 00-1.6-.93l-.36-2.5h-4l-.36 2.5c-.57.24-1.1.55-1.6.93L6.8 6.02l-2 3.46L6.83 11a7.89 7.89 0 000 1.88l-2.03 1.58 2 3.46 2.39-.96c.5.38 1.03.69 1.6.93l.36 2.5h4l.36-2.5c.57-.24 1.1-.55 1.6-.93l2.39.96 2-3.46-2.03-1.58zM12 15.5A3.5 3.5 0 1112 8.5a3.5 3.5 0 010 7z"/></svg><span class="nav-label">Settings</span></a>
+        <div class="side-footer">v2.0 • Modern & Fast</div>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="branch">Branch: <strong>Ikeja Branch</strong></div>
+        <div class="top-right">
+          <button id="profileBtn" class="profile-btn">A</button>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">🍽️ Restaurant Menu & Table Control</h1>
+            <p class="hero-copy">A full-screen, responsive menu view with categories, filters, live stats, and table tracking.</p>
+          </div>
+
+          <div class="controls-grid">
+            <div class="search-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l4.99 5L20.49 19l-4.99-5zM9.5 14A4.5 4.5 0 115 9.5 4.5 4.5 0 019.5 14z" fill="#475569"/></svg>
+              <input id="searchInput" type="text" placeholder="Search menu items, tables, or tags..." />
+              <span class="hint">Ctrl+K</span>
+            </div>
+            <div class="toolbar">
+              <select id="filterCategory">
+                <option value="">All Categories</option>
+              </select>
+              <button class="primary" id="updateMenuBtn">Refresh Menu</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-widgets">
+          <div class="widget"><strong id="statsItems">0</strong><span>Total Items</span></div>
+          <div class="widget"><strong id="statsInStock">0</strong><span>In Stock</span></div>
+          <div class="widget"><strong id="statsAvgPrice">$0.00</strong><span>Average Price</span></div>
+          <div class="widget"><strong id="foundCount">0</strong><span>Search Results</span></div>
+        </div>
+
+        <div>
+          <div class="tabs-row">
+            <button class="tab-pill active" id="tab-menu">Menu</button>
+            <button class="tab-pill" id="tab-tables">Tables</button>
+          </div>
+          <div class="category-carousel" id="categoryCarousel"></div>
+        </div>
+
+        <div id="menu-view">
+          <div id="menuContent" class="menu-grid"></div>
+        </div>
+
+        <div id="tables-view" style="display:none;">
+          <div id="tablesContent" class="menu-grid"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="modalOverlay" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <button class="modal-close" id="modalClose">✕</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="/js/sidebar.js" defer></script>
+  <script>
+    const MenuApp = {
+      state: {
+        view: 'menu',
+        menu: [],
+        filtered: [],
+        categories: [],
+        favorites: JSON.parse(localStorage.getItem('menuFavorites') || '[]'),
+        currentCategory: '',
+        search: '',
+        sortBy: 'name'
+      },
+
+      init() {
+        this.cacheElements();
+        this.attachEvents();
+        this.loadData();
+      },
+
+      cacheElements() {
+        this.menuContent = document.getElementById('menuContent');
+        this.tablesContent = document.getElementById('tablesContent');
+        this.searchInput = document.getElementById('searchInput');
+        this.filterCategory = document.getElementById('filterCategory');
+        this.categoryCarousel = document.getElementById('categoryCarousel');
+        this.tabMenu = document.getElementById('tab-menu');
+        this.tabTables = document.getElementById('tab-tables');
+        this.statsItems = document.getElementById('statsItems');
+        this.statsInStock = document.getElementById('statsInStock');
+        this.statsAvgPrice = document.getElementById('statsAvgPrice');
+        this.foundCount = document.getElementById('foundCount');
+        this.modalOverlay = document.getElementById('modalOverlay');
+        this.modalBody = document.getElementById('modalBody');
+        this.modalClose = document.getElementById('modalClose');
+      },
+
+      attachEvents() {
+        this.searchInput.addEventListener('input', (e) => {
+          this.state.search = e.target.value.trim();
+          this.filterMenu();
+        });
+
+        this.updateMenuBtn = document.getElementById('updateMenuBtn');
+        this.updateMenuBtn.addEventListener('click', () => this.loadData());
+
+        this.filterCategory.addEventListener('change', (e) => {
+          this.state.currentCategory = e.target.value;
+          this.filterMenu();
+        });
+
+        this.tabMenu.addEventListener('click', () => this.switchView('menu'));
+        this.tabTables.addEventListener('click', () => this.switchView('tables'));
+        this.modalOverlay.addEventListener('click', (event) => {
+          if (event.target === this.modalOverlay) this.closeModal();
+        });
+        this.modalClose.addEventListener('click', () => this.closeModal());
+
+        document.addEventListener('keydown', (event) => {
+          if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+            event.preventDefault();
+            this.searchInput.focus();
+          }
+          if (event.key === 'Escape') {
+            this.closeModal();
+          }
+        });
+      },
+
+      loadData() {
+        this.state.menu = [
+          { id: 1, emoji: '🐟', name: 'Grilled Salmon', category: 'Mains', price: 24.99, rating: 4.8, stock: 15, description: 'Atlantic salmon with lemon butter.' },
+          { id: 2, emoji: '🥩', name: 'Ribeye Steak', category: 'Mains', price: 32.99, rating: 4.9, stock: 8, description: 'Garlic rosemary butter steak.' },
+          { id: 3, emoji: '🥗', name: 'Caesar Salad', category: 'Starters', price: 12.99, rating: 4.5, stock: 20, description: 'Crisp romaine with house dressing.' },
+          { id: 4, emoji: '🍰', name: 'Chocolate Lava Cake', category: 'Desserts', price: 8.99, rating: 4.7, stock: 12, description: 'Warm cake with molten center.' },
+          { id: 5, emoji: '🍕', name: 'Margherita Pizza', category: 'Mains', price: 15.99, rating: 4.6, stock: 25, description: 'Tomato, mozzarella, basil.' },
+          { id: 6, emoji: '🍜', name: 'Pad Thai', category: 'Mains', price: 13.99, rating: 4.7, stock: 18, description: 'Thai noodles with shrimp.' }
+        ];
+
+        this.state.categories = ['All', ...new Set(this.state.menu.map((item) => item.category))];
+        this.renderCategoryOptions();
+        this.filterMenu();
+      },
+
+      renderCategoryOptions() {
+        this.filterCategory.innerHTML = this.state.categories.map((category) => {
+          const value = category === 'All' ? '' : category;
+          return `<option value="${value}">${category}</option>`;
+        }).join('');
+
+        this.categoryCarousel.innerHTML = this.state.categories.map((category) => {
+          const value = category === 'All' ? '' : category;
+          return `<button class="category-chip${this.state.currentCategory === value ? ' active' : ''}" data-value="${value}">${category}</button>`;
+        }).join('');
+
+        this.categoryCarousel.querySelectorAll('.category-chip').forEach((button) => {
+          button.addEventListener('click', () => {
+            this.state.currentCategory = button.dataset.value;
+            this.filterCategory.value = button.dataset.value;
+            this.updateActiveCategory();
+            this.filterMenu();
+          });
+        });
+      },
+
+      updateActiveCategory() {
+        this.categoryCarousel.querySelectorAll('.category-chip').forEach((button) => {
+          button.classList.toggle('active', button.dataset.value === this.state.currentCategory);
+        });
+      },
+
+      filterMenu() {
+        const search = this.state.search.toLowerCase();
+        this.state.filtered = this.state.menu.filter((item) => {
+          const matchesCategory = !this.state.currentCategory || item.category === this.state.currentCategory;
+          const matchesSearch = item.name.toLowerCase().includes(search) || item.description.toLowerCase().includes(search) || item.category.toLowerCase().includes(search);
+          return matchesCategory && matchesSearch;
+        });
+
+        this.renderMenu();
+        this.updateStats();
+      },
+
+      renderMenu() {
+        if (!this.state.filtered.length) {
+          this.menuContent.innerHTML = `<div style="grid-column:1/-1; padding: 60px 0; text-align:center; color:#64748b;">No menu items match your search.</div>`;
+          return;
+        }
+
+        this.menuContent.innerHTML = this.state.filtered.map((item) => {
+          const favorite = this.state.favorites.includes(item.id);
+          const stockLabel = item.stock === 0 ? 'Out of stock' : item.stock < 10 ? `Low ${item.stock}` : 'In stock';
+          return `
+            <article class="menu-card" data-id="${item.id}">
+              <div class="menu-card-hero"><span>${item.emoji}</span></div>
+              <div class="menu-card-body">
+                <div class="menu-card-meta">
+                  <div class="badge">${item.category}</div>
+                  <div class="badge">${stockLabel}</div>
+                </div>
+                <h2 class="menu-card-title">${item.name}</h2>
+                <p class="menu-card-copy">${item.description}</p>
+                <div class="menu-card-footer">
+                  <div class="menu-price">$${item.price.toFixed(2)}</div>
+                  <div class="menu-actions">
+                    <button class="button secondary favorite-btn">${favorite ? '♥' : '♡'}</button>
+                    <button class="button primary add-btn" ${item.stock === 0 ? 'disabled' : ''}>Add</button>
+                  </div>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('');
+
+        this.attachCardEvents();
+      },
+
+      attachCardEvents() {
+        this.menuContent.querySelectorAll('.menu-card').forEach((card) => {
+          const id = Number(card.dataset.id);
+          const item = this.state.menu.find((menuItem) => menuItem.id === id);
+
+          card.querySelector('.favorite-btn').addEventListener('click', (event) => {
+            event.stopPropagation();
+            this.toggleFavorite(id);
+          });
+
+          card.querySelector('.add-btn').addEventListener('click', (event) => {
+            event.stopPropagation();
+            this.showToast(`${item.name} added to order`);
+          });
+
+          card.addEventListener('click', () => this.openModal(item));
+        });
+      },
+
+      toggleFavorite(id) {
+        const index = this.state.favorites.indexOf(id);
+        if (index > -1) {
+          this.state.favorites.splice(index, 1);
+        } else {
+          this.state.favorites.push(id);
+        }
+        localStorage.setItem('menuFavorites', JSON.stringify(this.state.favorites));
+        this.renderMenu();
+      },
+
+      updateStats() {
+        this.statsItems.textContent = String(this.state.filtered.length);
+        this.statsInStock.textContent = String(this.state.filtered.filter((item) => item.stock > 0).length);
+        this.statsAvgPrice.textContent = `$${(this.state.filtered.reduce((sum, item) => sum + item.price, 0) / Math.max(this.state.filtered.length, 1)).toFixed(2)}`;
+        this.foundCount.textContent = String(this.state.filtered.length);
+      },
+
+      switchView(view) {
+        this.state.view = view;
+        this.tabMenu.classList.toggle('active', view === 'menu');
+        this.tabTables.classList.toggle('active', view === 'tables');
+        document.getElementById('menu-view').style.display = view === 'menu' ? 'block' : 'none';
+        document.getElementById('tables-view').style.display = view === 'tables' ? 'block' : 'none';
+        if (view === 'tables') this.renderTables();
+      },
+
+      renderTables() {
+        const tables = Array.from({ length: 12 }, (_, index) => ({
+          number: index + 1,
+          status: ['available', 'occupied', 'reserved'][Math.floor(Math.random() * 3)],
+          capacity: 2 + Math.floor(Math.random() * 4)
+        }));
+
+        this.tablesContent.innerHTML = tables.map((table) => {
+          const statusColor = table.status === 'available' ? '#d1fae5' : table.status === 'occupied' ? '#fee2e2' : '#fef3c7';
+          const statusText = table.status.charAt(0).toUpperCase() + table.status.slice(1);
+          return `
+            <div class="menu-card" style="min-height: 180px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="font-size: 1.75rem; font-weight: 800; margin-bottom: 8px;">Table ${table.number}</div>
+                <div style="display: inline-flex; padding: 8px 14px; border-radius: 999px; background:${statusColor}; color:#0f172a; font-weight:700;">${statusText}</div>
+              </div>
+              <div style="color:#475569;">Seats ${table.capacity}</div>
+            </div>
+          `;
+        }).join('');
+      },
+
+      openModal(item) {
+        this.modalBody.innerHTML = `
+          <div class="modal-grid">
+            <div style="font-size: 3rem; text-align:center;">${item.emoji}</div>
+            <div>
+              <h2 style="margin:0 0 10px 0;">${item.name}</h2>
+              <p style="margin:0 0 16px; color:#475569;">${item.description}</p>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                <span style="background:#eef2ff;color:#3730a3;padding:8px 12px;border-radius:999px;">${item.category}</span>
+                <span style="background:#ecfccb;color:#365314;padding:8px 12px;border-radius:999px;">${item.stock > 0 ? item.stock + ' available' : 'Sold Out'}</span>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;">
+              <strong style="font-size:1.4rem;">$${item.price.toFixed(2)}</strong>
+              <button class="button primary" onclick="MenuApp.showToast('${item.name} added to order'); MenuApp.closeModal();">Add to cart</button>
+            </div>
+          </div>
+        `;
+        this.modalOverlay.classList.add('active');
+      },
+
+      closeModal() {
+        this.modalOverlay.classList.remove('active');
+      },
+
+      showToast(message) {
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = 'position:fixed;bottom:24px;right:24px;padding:14px 18px;border-radius:14px;background:#111827;color:white;box-shadow:0 20px 45px rgba(15,23,42,0.25);z-index:2500;opacity:0;transform:translateY(16px);transition:all 0.25s ease';
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => { toast.style.opacity = '1'; toast.style.transform = 'translateY(0)'; });
+        setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(16px)'; setTimeout(() => toast.remove(), 250); }, 3000);
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => MenuApp.init());
+  </script>
+</body>
+</html>

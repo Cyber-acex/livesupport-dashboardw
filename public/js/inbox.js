@@ -24,6 +24,21 @@ socket.on('connect', () => {
     }).catch(() => {});
 });
 
+// Listen for staff-wide notifications
+socket.on('staffNotification', (data) => {
+    try{
+        const message = data && data.message ? data.message : '';
+        const from = data && data.from ? data.from : 'Staff';
+        // show a temporary alert near top of page
+        const id = 'inboxStaffNotify';
+        let el = document.getElementById(id);
+        if(!el){ el = document.createElement('div'); el.id = id; el.style.position='fixed'; el.style.top='12px'; el.style.left='50%'; el.style.transform='translateX(-50%)'; el.style.zIndex='99999'; el.style.padding='10px 14px'; el.style.borderRadius='8px'; el.style.background='#0ea5a4'; el.style.color='white'; el.style.boxShadow='0 6px 18px rgba(2,6,23,0.08)'; document.body.appendChild(el); }
+        el.textContent = `${from}: ${message}`;
+        el.style.display = 'block';
+        setTimeout(()=>{ try{ el.style.display='none'; }catch(e){} }, 6000);
+    }catch(e){ console.error('staffNotification (inbox) error', e); }
+});
+
 // Presence / typing listeners
 socket.on('presenceUpdate', (agents) => {
     updatePresenceUI(agents);
@@ -72,6 +87,17 @@ window.currentConversationId = null;
 window.currentConversation = null;
 
 const localResolvedChats = JSON.parse(localStorage.getItem('resolvedChats')) || [];
+
+function getInitials(value) {
+    if (!value) return '?';
+    const text = String(value).trim();
+    if (!text) return '?';
+    const parts = text.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) {
+        return parts[0].slice(0, 2).toUpperCase();
+    }
+    return (parts[0][0] + (parts[1][0] || '')).toUpperCase();
+}
 
 async function resolveEscalatedConversation(conv, targetSection) {
     if (!conv) return;
@@ -124,7 +150,11 @@ const aiUseButton = document.getElementById("ai-send");
 const fileInput = document.getElementById("internalFileInput");
 const addFileButton = document.getElementById("add-file");
 const selectedFileDisplay = document.getElementById("selected-file-display");
+const editChatNameBtn = document.getElementById('editChatNameBtn');
+const saveChatNameBtn = document.getElementById('saveChatNameBtn');
+const cancelChatNameBtn = document.getElementById('cancelChatNameBtn');
 let selectedFile = null;
+let originalChatName = '';
 
 window.inboxAppLoaded = true;
 
@@ -142,6 +172,96 @@ if (fileInput) {
         }
     });
 }
+
+function getChatNameText() {
+    const chatNameEl = document.getElementById('chatName');
+    return chatNameEl ? chatNameEl.textContent.trim() : '';
+}
+
+function enterChatNameEditMode() {
+    const chatNameEl = document.getElementById('chatName');
+    if (!chatNameEl) return;
+    originalChatName = chatNameEl.textContent.trim() || '';
+    const input = document.createElement('input');
+    input.id = 'chatNameInput';
+    input.type = 'text';
+    input.value = originalChatName;
+    input.style.cssText = 'width: 200px; min-width: 120px; padding: 6px 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 1rem;';
+    chatNameEl.replaceWith(input);
+    editChatNameBtn && (editChatNameBtn.style.display = 'none');
+    saveChatNameBtn && (saveChatNameBtn.style.display = 'inline-flex');
+    cancelChatNameBtn && (cancelChatNameBtn.style.display = 'inline-flex');
+    input.focus();
+    input.select();
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            saveChatName();
+        } else if (event.key === 'Escape') {
+            event.preventDefault();
+            cancelChatNameEditMode();
+        }
+    });
+}
+
+function exitChatNameEditMode(useSaved) {
+    const input = document.getElementById('chatNameInput');
+    if (!input) return;
+    const newName = useSaved ? input.value.trim() || originalChatName : originalChatName;
+    const strong = document.createElement('strong');
+    strong.id = 'chatName';
+    strong.textContent = newName;
+    input.replaceWith(strong);
+    editChatNameBtn && (editChatNameBtn.style.display = 'inline-flex');
+    saveChatNameBtn && (saveChatNameBtn.style.display = 'none');
+    cancelChatNameBtn && (cancelChatNameBtn.style.display = 'none');
+}
+
+async function saveChatName() {
+    const input = document.getElementById('chatNameInput');
+    if (!input || !currentConversationId) return;
+    const newName = input.value.trim();
+    if (!newName) {
+        alert('Please enter a customer name.');
+        input.focus();
+        return;
+    }
+    try {
+        const res = await fetch('/api/conversations', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: currentConversationId, name: newName })
+        });
+        const data = await res.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Save failed');
+        }
+        const cachedConv = conversationCache.find(c => String(c.id) === String(currentConversationId));
+        if (cachedConv) {
+            cachedConv.name = newName;
+        }
+        const listNameEl = document.querySelector(`.conversation[data-id="${currentConversationId}"] .name`);
+        if (listNameEl) {
+            listNameEl.textContent = newName;
+        }
+        const infoNameEl = document.getElementById('info-name');
+        if (infoNameEl) {
+            infoNameEl.textContent = newName;
+        }
+        exitChatNameEditMode(true);
+    } catch (error) {
+        console.error('Error saving chat name', error);
+        alert('Unable to save customer name.');
+    }
+}
+
+function cancelChatNameEditMode() {
+    exitChatNameEditMode(false);
+}
+
+editChatNameBtn && editChatNameBtn.addEventListener('click', enterChatNameEditMode);
+saveChatNameBtn && saveChatNameBtn.addEventListener('click', saveChatName);
+cancelChatNameBtn && cancelChatNameBtn.addEventListener('click', cancelChatNameEditMode);
 
 // Typing indicator: emit typing events when agent types
 let _typingEmitTimer = null;
@@ -210,10 +330,15 @@ function createConversationElement(conv, filter = 'all') {
     const resolvedInfo = conv.resolved_at ? `<br><small>Resolved: ${new Date(conv.resolved_at).toLocaleString()}</small>` : '';
     const refundedInfo = conv.refunded_at ? `<br><small>Refunded: ${new Date(conv.refunded_at).toLocaleString()}</small>` : '';
     const reportedInfo = conv.reported_at ? `<br><small>Reported: ${new Date(conv.reported_at).toLocaleString()}</small>` : '';
+    const displayName = conv.name || conv.phone || 'Customer';
+    const initials = getInitials(displayName);
     div.innerHTML = `
-        <div class="name">${conv.phone}</div>
-        <div class="preview">Click to open</div>
-        <div class="meta">${conv.platform ? conv.platform.charAt(0).toUpperCase() + conv.platform.slice(1) : 'WhatsApp'}${escalatedInfo}${resolvedInfo}${refundedInfo}${reportedInfo}</div>
+        <div class="avatar">${initials}</div>
+        <div class="conv-meta">
+            <div class="name">${displayName}</div>
+            <div class="preview">Click to open</div>
+            <div class="meta">${conv.platform ? conv.platform.charAt(0).toUpperCase() + conv.platform.slice(1) : 'WhatsApp'}${escalatedInfo}${resolvedInfo}${refundedInfo}${reportedInfo}</div>
+        </div>
     `;
 
     if (conv.escalated_at) {
@@ -315,7 +440,11 @@ function createConversationElement(conv, filter = 'all') {
         window.currentConversationId = conv.id;
         window.currentConversation = conv.id;
         loadMessages(conv.id, filter === 'escalated');
-        document.querySelector(".chat-header strong").textContent = conv.phone;
+        const displayName = conv.name || conv.phone || 'Customer';
+        const chatHeaderName = document.querySelector(".chat-header strong");
+        if (chatHeaderName) chatHeaderName.textContent = displayName;
+        const chatAvatar = document.getElementById('chatAvatar');
+        if (chatAvatar) chatAvatar.textContent = getInitials(displayName);
         try { socket.emit('agent:activeConversation', { conversationId: conv.id }); } catch (e) {}
     });
 
@@ -494,19 +623,28 @@ async function renderReceipts() {
         const fragment = document.createDocumentFragment();
         tickets.forEach(ticket => {
             const div = document.createElement("div");
-            div.classList.add("conversation");
-            div.style.position = "relative";
+            div.classList.add("receipt-card");
             div.dataset.ticketId = ticket.id;
             
-            const preview = ticket.content.substring(0, 50) + (ticket.content.length > 50 ? "..." : "");
+            const preview = ticket.content.substring(0, 90) + (ticket.content.length > 90 ? "..." : "");
             const createdAt = new Date(ticket.created_at).toLocaleString();
+            const statusLabel = ticket.escalated ? 'Escalated' : 'Saved';
             
             div.innerHTML = `
-                <div class="name">Receipt #${ticket.id}</div>
-                <div class="preview">${preview}</div>
-                <div class="meta">${createdAt}${ticket.escalated ? ' • Escalated' : ''}</div>
+                <div class="receipt-top">
+                    <div>
+                        <p class="receipt-title">Receipt #${ticket.id}</p>
+                        <p class="receipt-subtitle">${createdAt}</p>
+                    </div>
+                    <span class="receipt-badge">${statusLabel}</span>
+                </div>
+                <p class="receipt-preview">${preview}</p>
+                <div class="receipt-footer">
+                    <span class="receipt-status">${ticket.escalated ? 'Priority escalation' : 'Stored receipt'}</span>
+                    <button class="receipt-action" type="button">Preview</button>
+                </div>
             `;
-            
+
             div.addEventListener("click", () => {
                 displayTicketActions(ticket);
             });
@@ -514,7 +652,11 @@ async function renderReceipts() {
             fragment.appendChild(div);
         });
         
-        conversationsList.appendChild(fragment);
+        conversationsList.innerHTML = '';
+        const listWrapper = document.createElement('div');
+        listWrapper.className = 'receipt-list';
+        listWrapper.appendChild(fragment);
+        conversationsList.appendChild(listWrapper);
     } catch (error) {
         console.error("Error fetching receipts:", error);
         renderNoReceipts();
@@ -524,12 +666,18 @@ async function renderReceipts() {
 function displayTicketActions(ticket) {
     // Clear the messages container and show the ticket with action buttons
     messagesContainer.innerHTML = `
-        <div style="padding: 20px; background: #f5f5f5; border-radius: 8px;">
-            <h3 style="margin-top: 0;">Ticket #${ticket.id}</h3>
-            <pre style="background: white; padding: 15px; border-radius: 6px; overflow-x: auto;">${ticket.content}</pre>
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button id="ticket-print-btn" class="ai-btn success" style="flex: 1;">Print</button>
-                <button id="ticket-delete-btn" class="ai-btn warning" style="flex: 1; background: #dc2626;">Delete</button>
+        <div class="receipt-detail-panel">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                <div>
+                    <h3>Receipt #${ticket.id}</h3>
+                    <div class="receipt-subtitle">${new Date(ticket.created_at).toLocaleString()}</div>
+                </div>
+                <span class="receipt-badge">DETAIL VIEW</span>
+            </div>
+            <pre>${ticket.content}</pre>
+            <div class="receipt-actions-row">
+                <button id="ticket-print-btn" class="ai-btn success">Print</button>
+                <button id="ticket-delete-btn" class="ai-btn warning" style="background: #dc2626;">Delete</button>
             </div>
         </div>
     `;
@@ -572,7 +720,11 @@ async function loadMessages(conversationId, isEscalated = false) {
     messagesContainer.innerHTML = `<div class="loading-message">Loading chat...</div>`;
     const cachedConv = conversationCache.find(c => c.id == conversationId);
     if (cachedConv) {
-        document.getElementById("chatName").textContent = cachedConv.phone;
+        const displayName = cachedConv.name || cachedConv.phone || 'Customer';
+        const chatNameEl = document.getElementById("chatName");
+        if (chatNameEl) chatNameEl.textContent = displayName;
+        const chatAvatar = document.getElementById('chatAvatar');
+        if (chatAvatar) chatAvatar.textContent = getInitials(displayName);
         const channelSpan = document.querySelector(".channel");
         if (channelSpan) {
             channelSpan.textContent = cachedConv.platform ? cachedConv.platform.charAt(0).toUpperCase() + cachedConv.platform.slice(1) : 'WhatsApp';
@@ -948,6 +1100,17 @@ messageInput.addEventListener("keydown", async (event) => {
 // Notification functions
 // ---------------------------
 
+function saveNotification(message, source = 'Inbox', type = 'inbox') {
+    try {
+        const key = 'liveSupportNotifications';
+        const list = JSON.parse(localStorage.getItem(key) || '[]');
+        list.unshift({ message, source, type, time: new Date().toISOString() });
+        localStorage.setItem(key, JSON.stringify(list.slice(0, 25)));
+    } catch (e) {
+        console.error('Save notification failed', e);
+    }
+}
+
 function showNotification(message) {
     const bar = document.getElementById("notificationBar");
     const text = document.getElementById("notificationText");
@@ -957,6 +1120,7 @@ function showNotification(message) {
     setTimeout(() => {
         bar.style.display = "none";
     }, 5000);
+    saveNotification(message, 'Inbox', 'inbox');
 }
 
 function hideNotification() {
@@ -1057,19 +1221,27 @@ filterButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         filterButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        const filterText = btn.textContent.trim().toLowerCase();
-        if (filterText === 'escalated') {
-            loadConversations('escalated');
-        } else if (filterText === 'resolved') {
-            loadConversations('resolved');
-        } else if (filterText === 'receipt' || filterText === 'receipts') {
-            renderReceipts();
-        } else if (filterText === 'refunds') {
-            loadConversations('refunds');
-        } else if (filterText === 'delivery issues') {
-            loadConversations('delivery-issues');
-        } else {
-            loadConversations('all');
+        const filterKey = btn.dataset.filter ? btn.dataset.filter.trim().toLowerCase() : btn.textContent.trim().toLowerCase();
+        switch (filterKey) {
+            case 'escalated':
+                loadConversations('escalated');
+                break;
+            case 'resolved':
+                loadConversations('resolved');
+                break;
+            case 'receipt':
+            case 'receipts':
+                renderReceipts();
+                break;
+            case 'refunds':
+                loadConversations('refunds');
+                break;
+            case 'delivery-issues':
+            case 'delivery issues':
+                loadConversations('delivery-issues');
+                break;
+            default:
+                loadConversations('all');
         }
     });
 });

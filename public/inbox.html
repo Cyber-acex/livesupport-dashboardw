@@ -1,0 +1,1075 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="/favicon-icon.svg" type="image/svg+xml">
+    <link rel="shortcut icon" href="/favicon-icon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>document.documentElement.classList.add('ls-js');</script>
+    <script src="./js/user.js"></script>
+    <title>LiveSupport Dashboard</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/sidebar.css">
+    <link rel="stylesheet" href="./css/timestamp.css">
+    <script>
+            // Apply theme from localStorage immediately to prevent flash
+            (function applyThemeImmediately() {
+                const theme = localStorage.getItem('theme') || 'Light';
+                if (theme === 'Dark') {
+                    document.body.classList.add('dark-theme');
+                } else {
+                    document.body.classList.remove('dark-theme');
+                }
+            })();
+    </script>
+    <script>
+            // Apply sidebar position and width preferences immediately
+            (function applySidebarPreferences() {
+                const sidebarPosition = localStorage.getItem('sidebarPosition') || 'left';
+                const sidebarWidth = localStorage.getItem('sidebarWidth') || 'standard';
+                document.documentElement.setAttribute('data-sidebar-pos', sidebarPosition);
+                document.documentElement.setAttribute('data-sidebar-width', sidebarWidth);
+            })();
+    </script>
+</head>
+<body>
+<div class="dashboard">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <h2 class="logo">LiveSupport</h2>
+        <nav class="menu">
+            <a href="./dashboard.html" class="active"><svg  viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg><span class="nav-label">Back</span></a> 
+        </nav>
+    </aside>
+    <!-- MAIN AREA -->
+    <div class="main">
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <a href="./dashboard.html" class="back-btn" title="Back to dashboard" aria-label="Back to dashboard">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" fill="currentColor"/></svg>
+            </a>
+            <div class="branch">
+                Branch: <strong>Ikeja Branch</strong>
+            </div>
+            <div class="top-right">
+              <div class="profile">
+                <button id="profileBtn" class="btn profile-btn" aria-haspopup="true" aria-expanded="false">
+                  <div class="profile-status-mini" id="profileStatusMini"><span class="status-dot-mini online"></span></div>
+                  <img class="avatar-sm-img" src="" alt="avatar" style="display:none" />
+                  <span class="avatar-sm">A</span>
+                </button>
+                <div id="profileDropdown" class="profile-dropdown" aria-hidden="true">
+                  <div class="profile-info"><strong id="profileName">Staff</strong></div>
+                  <div class="profile-status">
+                    <div class="status-header">
+                      <span class="status-label">Status</span>
+                      <div class="status-indicator" id="statusIndicator">
+                        <span class="status-dot online"></span>
+                        <span class="status-text">Online</span>
+                      </div>
+                    </div>
+                    <div class="status-toggle">
+                      <button class="status-btn online active" data-status="online"><span class="status-dot online"></span> Online</button>
+                      <button class="status-btn away" data-status="away"><span class="status-dot away"></span> Away</button>
+                      <button class="status-btn offline" data-status="offline"><span class="status-dot offline"></span> Offline</button>
+                    </div>
+                  </div>
+                  <div class="profile-session">
+                    <div class="session-header">Session Info</div>
+                    <div class="session-details">
+                      <div class="session-item"><span class="session-icon">🕐</span><span class="session-label">Logged in:</span><span class="session-value" id="loginTime">--:--</span></div>
+                      <div class="session-item"><span class="session-icon">⏱️</span><span class="session-label">Duration:</span><span class="session-value" id="sessionDuration">--:--</span></div>
+                      <div class="session-item"><span class="session-icon">⚡</span><span class="session-label">Last activity:</span><span class="session-value" id="lastActivity">--:--</span></div>
+                    </div>
+                  </div>
+                  <div class="profile-actions">
+                    <a id="profileSettings" class="profile-action" href="settings.html"><span class="profile-icon">⚙️</span> Settings</a>
+                    <button id="logoutBtn" class="profile-action"><span class="profile-icon">🚪</span> Logout</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </header>
+        <!-- NOTIFICATION BAR -->
+        <div id="notificationBar" class="notification-bar" style="display: none; background: #ff6b6b; color: white; padding: 10px; text-align: center; position: relative; z-index: 1000;">
+            <span id="notificationText">New message received!</span>
+            <button id="closeNotification" class="close-btn" style="background: none; border: none; color: white; font-size: 20px; position: absolute; right: 10px; top: 5px; cursor: pointer;">&times;</button>
+        </div>
+        <!-- CONTENT -->
+<section class="content">
+    <h1>Inbox</h1>
+    <div class="inbox-container">                                        
+        <!-- FILTERS -->
+        <div class="filters">
+            <div class="filter-title">
+                <div>
+                    <strong>Smart Queue</strong>
+                    <p>Route escalations, refunds, and priority chats.</p>
+                </div>
+            </div>
+            <button class="filter active" data-filter="all"><span class="filter-icon">✨</span><span>New</span></button>
+            <button class="filter" data-filter="receipts"><span class="filter-icon">🧾</span><span>Receipts</span></button>
+            <button class="filter" data-filter="escalated"><span class="filter-icon">⚠️</span><span>Escalated</span></button>
+            <button class="filter" data-filter="resolved"><span class="filter-icon">✅</span><span>Resolved</span></button>
+            <button class="filter" data-filter="refunds"><span class="filter-icon">💸</span><span>Refunds</span></button>
+            <button class="filter" data-filter="delivery-issues"><span class="filter-icon">🚚</span><span>Delivery Issues</span></button>
+        </div>
+        <!-- CONVERSATION LIST -->
+        <div class="conversation-list">
+    <div class="conversation active">
+        <div class="avatar">C1</div>
+        <div class="conv-meta">
+            <div class="name">Customer 1</div>
+            <div class="preview">Where is my order?</div>
+            <div class="meta">WhatsApp • 2m ago</div>
+        </div>
+    </div>
+    <div class="conversation">
+        <div class="avatar">C1</div>
+        <div class="conv-meta">
+            <div class="name">Customer 1</div>
+            <div class="preview">I want a refund</div>
+            <div class="meta">Instagram • 5m ago</div>
+        </div>
+    </div>
+</div>
+        <!-- CHAT PANEL -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <div class="chat-header-title">
+                    <div class="chat-avatar" id="chatAvatar">JD</div>
+                    <div class="chat-title-text" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <strong id="chatName">John Doe</strong>
+                        <div id="chatNameControls" style="display:flex; align-items:center; gap:6px;">
+                            <button id="editChatNameBtn" class="icon-btn" type="button" title="Edit customer name" style="border:none;background:transparent;color:#4b5563;font-size:1rem;cursor:pointer;">✏️</button>
+                            <button id="saveChatNameBtn" class="icon-btn" type="button" title="Save customer name" style="display:none;border:none;background:transparent;color:#047857;font-size:1rem;cursor:pointer;">💾</button>
+                            <button id="cancelChatNameBtn" class="icon-btn" type="button" title="Cancel" style="display:none;border:none;background:transparent;color:#dc2626;font-size:1rem;cursor:pointer;">✕</button>
+                        </div>
+                        <span class="chat-subtitle">Customer conversation</span>
+                    </div>
+                </div>
+                <div class="chat-header-right">
+                    <span id="typingIndicator" style="color:#888; font-size:13px;"></span>
+                    <span class="channel">WhatsApp</span>
+                    <span id="escalatedBadge" style="
+                        display:none;
+                        background:red;
+                        color:white;
+                        padding:4px 10px;
+                        border-radius:6px;
+                        font-size:12px;
+                    ">Escalated</span>
+                </div>
+            </div>
+<div style="text-align:right; margin-bottom:5px;">
+    <button id="scroll-down-btn" class="ai-btn">⬇️ Scroll to Bottom</button>
+</div>
+            <div class="messages" id="chat-messages">
+                <div class="message customer">
+                    Where is my order?
+                </div>
+                <div class="message ai">
+                    Your order is on the way. ETA 15 minutes.
+                </div>
+            </div>
+            <!-- AI SUGGESTION BOX -->
+<div class="ai-suggestion">
+    <div class="ai-header">
+        🤖 AI Suggested Reply
+        <span id="confidence-label" style="background:#10b981; color:white; padding:3px 8px; border-radius:6px; font-size:12px; margin-left:8px;">
+        Confidence: 87%
+        </span>
+        <button id="feedbackThumbsUp" title="Thumbs up" style="margin-left:8px;padding:6px;border-radius:6px;border:none;background:#10b981;color:white;">👍</button>
+        <button id="feedbackThumbsDown" title="Thumbs down" style="margin-left:6px;padding:6px;border-radius:6px;border:none;background:#ef4444;color:white;">👎</button>
+    </div>
+    <textarea id="ai-text">
+Your order is currently out for delivery and should arrive within 15 minutes. Thank you for your patience!
+    </textarea>
+    <div class="ai-actions">
+        <button class="ai-btn primary" id="ai-send">Use suggestion</button>
+        <button class="ai-btn">Edit</button>
+    </div>
+</div>
+            <div class="chat-input">
+                <input type="text" id="staff-input" placeholder="Type a reply..." />
+                <button id="staff-send">Send</button>
+                <div class="internal-note-box">
+                    <button id="add-file">+ Add file</button>
+                    <input type="file" id="internalFileInput" style="display:none;" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx" />
+                    <div id="selected-file-display" class="selected-file-info"></div>
+                </div>
+            </div>
+        </div>
+        <!-- INFO PANEL -->
+<div class="info-panel">
+    <h3>Customer Info</h3>
+    <div class="info-box">
+        <p><strong>Name:</strong> <span id="info-name">Loading...</span></p>
+        <p><strong>Phone:</strong> <span id="info-phone">Loading...</span></p>
+        <p><strong>Total Orders:</strong> <span id="info-total-orders">0</span></p>
+        <p><strong>Risk Flag:</strong> <span id="info-risk-flag">None</span></p>
+    </div>
+    <h3>Active Order</h3>
+    <div class="info-box">
+        <p><strong>Order ID:</strong> <span id="active-order-id">None</span></p>
+        <p><strong>Status:</strong> <span id="active-order-status">-</span></p>
+        <p><strong>ETA:</strong> <span id="active-order-eta">-</span></p>
+        <p><strong>Items:</strong> <span id="active-order-items">-</span></p>
+    </div>
+    <h3>Quick Actions</h3>
+    <div class="actions">
+        <button id="openTicketModal" class="action-btn">Create Receipt</button>
+        <button class="action-btn warning escalate-btn">Escalate</button>
+        <button id="dashboardPlaceOrder" class="action-btn success">Place Order</button>
+    </div>
+</div>
+    </div>
+</div>
+</section>
+    </div>
+</div>
+<!-- RECEIPT MODAL -->
+<div id="ticketModal" class="modal">
+  <div class="modal-backdrop"></div>
+  <div class="modal-content receipt-modal">
+    <div class="modal-header">
+      <div class="modal-title-section">
+        <div class="modal-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2 class="modal-title">Create Receipt</h2>
+      </div>
+      <button class="modal-close-btn" aria-label="Close modal">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="receipt-creator">
+        <!-- Restaurant Info Section -->
+        <div class="receipt-section">
+          <h3 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Restaurant Information
+          </h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="restaurantName">Restaurant Name</label>
+              <input type="text" id="restaurantName" placeholder="Enter restaurant name" value="LiveSupport Restaurant">
+            </div>
+            <div class="form-group">
+              <label for="restaurantAddress">Address</label>
+              <input type="text" id="restaurantAddress" placeholder="Enter address" value="123 Main St, Lagos, Nigeria">
+            </div>
+            <div class="form-group">
+              <label for="restaurantPhone">Phone</label>
+              <input type="tel" id="restaurantPhone" placeholder="Enter phone number" value="+1 (555) 176-2972">
+            </div>
+            <div class="form-group">
+              <label for="restaurantEmail">Email</label>
+              <input type="email" id="restaurantEmail" placeholder="Enter email" value="support@restaurant.com">
+            </div>
+          </div>
+        </div>
+
+        <!-- Transaction Info Section -->
+        <div class="receipt-section">
+          <h3 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Transaction Details
+          </h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="receiptNumber">Receipt #</label>
+              <input type="text" id="receiptNumber" placeholder="Auto-generated" readonly>
+            </div>
+            <div class="form-group">
+              <label for="receiptDate">Date</label>
+              <input type="date" id="receiptDate">
+            </div>
+            <div class="form-group">
+              <label for="receiptTime">Time</label>
+              <input type="time" id="receiptTime">
+            </div>
+            <div class="form-group">
+              <label for="serverName">Server</label>
+              <input type="text" id="serverName" placeholder="Enter server name" value="Staff">
+            </div>
+            <div class="form-group">
+              <label for="tableNumber">Table</label>
+              <input type="text" id="tableNumber" placeholder="Table number" value="01">
+            </div>
+            <div class="form-group">
+              <label for="paymentMethod">Payment Method</label>
+              <select id="paymentMethod">
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="transfer">Bank Transfer</option>
+                <option value="wallet">Digital Wallet</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Items Section -->
+        <div class="receipt-section">
+          <div class="section-header">
+            <h3 class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Items
+            </h3>
+            <button class="add-item-btn" id="addItemBtn">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Add Item
+            </button>
+          </div>
+
+          <div class="items-container" id="itemsContainer">
+            <div class="items-header">
+              <span class="item-col item-name">Item</span>
+              <span class="item-col item-qty">Qty</span>
+              <span class="item-col item-price">Price</span>
+              <span class="item-col item-total">Total</span>
+              <span class="item-col item-actions">Actions</span>
+            </div>
+
+            <!-- Default item -->
+            <div class="item-row" data-item-id="1">
+              <input type="text" class="item-name-input" placeholder="Item name" value="Welcome Drink">
+              <input type="number" class="item-qty-input" min="1" value="1">
+              <input type="number" class="item-price-input" min="0" step="0.01" placeholder="0.00" value="500">
+              <span class="item-total-display">₦500.00</span>
+              <button class="remove-item-btn" title="Remove item">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculations Section -->
+        <div class="receipt-section">
+          <h3 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Calculations
+          </h3>
+          <div class="calculations-grid">
+            <div class="calc-row">
+              <label for="subtotal">Subtotal</label>
+              <input type="number" id="subtotal" readonly>
+            </div>
+            <div class="calc-row">
+              <label for="taxRate">Tax Rate (%)</label>
+              <input type="number" id="taxRate" min="0" step="0.01" value="7.5">
+            </div>
+            <div class="calc-row">
+              <label for="taxAmount">Tax Amount</label>
+              <input type="number" id="taxAmount" readonly>
+            </div>
+            <div class="calc-row">
+              <label for="serviceChargeRate">Service Charge (%)</label>
+              <input type="number" id="serviceChargeRate" min="0" step="0.01" value="5">
+            </div>
+            <div class="calc-row">
+              <label for="serviceChargeAmount">Service Charge</label>
+              <input type="number" id="serviceChargeAmount" readonly>
+            </div>
+            <div class="calc-row total-row">
+              <label for="grandTotal">Grand Total</label>
+              <input type="number" id="grandTotal" readonly>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes Section -->
+        <div class="receipt-section">
+          <h3 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Additional Notes
+          </h3>
+          <textarea id="receiptNotes" placeholder="Add any additional notes or special instructions..." rows="3"></textarea>
+        </div>
+      </div>
+
+      <div class="receipt-preview" id="receiptPreview" style="display: none;">
+        <div class="preview-header">
+          <h3>Receipt Preview</h3>
+          <button class="preview-close-btn">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="preview-content">
+          <pre id="previewText"></pre>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <div class="modal-stats">
+        <div class="stat-item">
+          <span class="stat-label">Characters:</span>
+          <span class="stat-value" id="charCount">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Lines:</span>
+          <span class="stat-value" id="lineCount">0</span>
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button id="saveTicket" class="ai-btn primary">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Save
+        </button>
+        <button id="printTicket" class="ai-btn success">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6 14h12v8H6z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Print
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--ALL THE SCRIPTS START FROM HERE-->
+<script>
+fetch("/api/user")
+.then(response => response.json())
+.then(data => {
+    document.getElementById("staffName").textContent = data.role;
+})
+.catch(error => {
+    console.log("User fetch error:", error);
+});
+</script>
+<!---->
+<script>
+// Advanced Receipt Creator
+let itemCounter = 1;
+
+// Initialize receipt creator
+function initReceiptCreator() {
+  // Set current date and time
+  const now = new Date();
+  document.getElementById('receiptDate').value = now.toISOString().split('T')[0];
+  document.getElementById('receiptTime').value = now.toTimeString().slice(0, 5);
+
+  // Generate receipt number
+  const receiptNum = 'RCP-' + Date.now().toString().slice(-6);
+  document.getElementById('receiptNumber').value = receiptNum;
+
+  // Set up event listeners
+  setupEventListeners();
+
+  // Calculate initial totals
+  calculateTotals();
+}
+
+// Set up all event listeners
+function setupEventListeners() {
+  // Add item button
+  document.getElementById('addItemBtn').addEventListener('click', addNewItem);
+
+  // Dynamic calculations
+  document.getElementById('taxRate').addEventListener('input', calculateTotals);
+  document.getElementById('serviceChargeRate').addEventListener('input', calculateTotals);
+
+  // Item changes
+  document.getElementById('itemsContainer').addEventListener('input', handleItemChange);
+  document.getElementById('itemsContainer').addEventListener('click', handleItemRemove);
+
+  // Preview functionality
+  const previewBtn = document.querySelector('.toolbar-btn[title="Preview"]');
+  if (previewBtn) {
+    previewBtn.addEventListener('click', showPreview);
+  }
+  document.querySelector('.preview-close-btn').addEventListener('click', hidePreview);
+}
+
+// Add new item row
+function addNewItem() {
+  itemCounter++;
+  const itemsContainer = document.getElementById('itemsContainer');
+
+  const itemRow = document.createElement('div');
+  itemRow.className = 'item-row';
+  itemRow.setAttribute('data-item-id', itemCounter);
+
+  itemRow.innerHTML = `
+    <input type="text" class="item-name-input" placeholder="Item name">
+    <input type="number" class="item-qty-input" min="1" value="1">
+    <input type="number" class="item-price-input" min="0" step="0.01" placeholder="0.00">
+    <span class="item-total-display">₦0.00</span>
+    <button class="remove-item-btn" title="Remove item">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  `;
+
+  itemsContainer.appendChild(itemRow);
+  calculateTotals();
+}
+
+// Handle item input changes
+function handleItemChange(e) {
+  if (e.target.classList.contains('item-qty-input') || e.target.classList.contains('item-price-input')) {
+    updateItemTotal(e.target.closest('.item-row'));
+    calculateTotals();
+  }
+}
+
+// Update individual item total
+function updateItemTotal(itemRow) {
+  const qty = parseFloat(itemRow.querySelector('.item-qty-input').value) || 0;
+  const price = parseFloat(itemRow.querySelector('.item-price-input').value) || 0;
+  const total = qty * price;
+
+  itemRow.querySelector('.item-total-display').textContent = `₦${total.toFixed(2)}`;
+}
+
+// Handle item removal
+function handleItemRemove(e) {
+  if (e.target.closest('.remove-item-btn')) {
+    const itemRow = e.target.closest('.item-row');
+    const itemsContainer = document.getElementById('itemsContainer');
+    const itemRows = itemsContainer.querySelectorAll('.item-row');
+
+    // Don't remove if it's the last item
+    if (itemRows.length > 1) {
+      itemRow.remove();
+      calculateTotals();
+    } else {
+      alert('At least one item is required.');
+    }
+  }
+}
+
+// Calculate all totals
+function calculateTotals() {
+  const itemRows = document.querySelectorAll('.item-row');
+  let subtotal = 0;
+
+  // Calculate subtotal from all items
+  itemRows.forEach(row => {
+    const qty = parseFloat(row.querySelector('.item-qty-input').value) || 0;
+    const price = parseFloat(row.querySelector('.item-price-input').value) || 0;
+    subtotal += qty * price;
+  });
+
+  // Update subtotal
+  document.getElementById('subtotal').value = subtotal.toFixed(2);
+
+  // Calculate tax
+  const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+  const taxAmount = (subtotal * taxRate) / 100;
+  document.getElementById('taxAmount').value = taxAmount.toFixed(2);
+
+  // Calculate service charge
+  const serviceChargeRate = parseFloat(document.getElementById('serviceChargeRate').value) || 0;
+  const serviceChargeAmount = (subtotal * serviceChargeRate) / 100;
+  document.getElementById('serviceChargeAmount').value = serviceChargeAmount.toFixed(2);
+
+  // Calculate grand total
+  const grandTotal = subtotal + taxAmount + serviceChargeAmount;
+  document.getElementById('grandTotal').value = grandTotal.toFixed(2);
+}
+
+// Generate receipt text from form data
+function generateReceiptText() {
+  const data = {
+    restaurantName: document.getElementById('restaurantName').value,
+    address: document.getElementById('restaurantAddress').value,
+    phone: document.getElementById('restaurantPhone').value,
+    email: document.getElementById('restaurantEmail').value,
+    receiptNumber: document.getElementById('receiptNumber').value,
+    date: document.getElementById('receiptDate').value,
+    time: document.getElementById('receiptTime').value,
+    server: document.getElementById('serverName').value,
+    table: document.getElementById('tableNumber').value,
+    paymentMethod: document.getElementById('paymentMethod').value,
+    notes: document.getElementById('receiptNotes').value,
+    subtotal: parseFloat(document.getElementById('subtotal').value),
+    taxRate: parseFloat(document.getElementById('taxRate').value),
+    taxAmount: parseFloat(document.getElementById('taxAmount').value),
+    serviceChargeRate: parseFloat(document.getElementById('serviceChargeRate').value),
+    serviceChargeAmount: parseFloat(document.getElementById('serviceChargeAmount').value),
+    grandTotal: parseFloat(document.getElementById('grandTotal').value)
+  };
+
+  // Get items
+  const items = [];
+  document.querySelectorAll('.item-row').forEach(row => {
+    const name = row.querySelector('.item-name-input').value;
+    const qty = parseFloat(row.querySelector('.item-qty-input').value) || 0;
+    const price = parseFloat(row.querySelector('.item-price-input').value) || 0;
+    const total = qty * price;
+
+    if (name.trim()) {
+      items.push({ name, qty, price, total });
+    }
+  });
+
+  // Format date
+  const dateObj = new Date(data.date + 'T' + data.time);
+  const formattedDate = dateObj.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+
+  // Generate receipt text
+  let receipt = '';
+
+  // Header
+  receipt += `${data.restaurantName}\n`;
+  receipt += `${data.address}\n`;
+  receipt += `${data.phone} | ${data.email}\n`;
+  receipt += '__________________________________________\n';
+  receipt += `Receipt #: ${data.receiptNumber} Date: ${formattedDate}\n`;
+  receipt += `Table: ${data.table} Time: ${data.time}\n`;
+  receipt += `Server: ${data.server}\n`;
+  receipt += '__________________________________________\n';
+
+  // Items header
+  receipt += 'Item                          Qty   Price   Total\n';
+  receipt += '__________________________________________\n';
+
+  // Items
+  items.forEach(item => {
+    const name = item.name.padEnd(30, ' ');
+    const qty = item.qty.toString().padStart(3, ' ');
+    const price = `₦${item.price.toFixed(2)}`.padStart(7, ' ');
+    const total = `₦${item.total.toFixed(2)}`.padStart(7, ' ');
+    receipt += `${name}${qty}${price}${total}\n`;
+  });
+
+  receipt += '__________________________________________\n';
+
+  // Totals
+  const subtotalStr = `₦${data.subtotal.toFixed(2)}`.padStart(7, ' ');
+  const taxStr = `₦${data.taxAmount.toFixed(2)}`.padStart(7, ' ');
+  const serviceStr = `₦${data.serviceChargeAmount.toFixed(2)}`.padStart(7, ' ');
+
+  receipt += `Subtotal:${' '.repeat(25)}${subtotalStr}\n`;
+  receipt += `VAT (${data.taxRate}%):${' '.repeat(20)}${taxStr}\n`;
+  receipt += `Service Charge (${data.serviceChargeRate}%):${' '.repeat(10)}${serviceStr}\n`;
+  receipt += '__________________________________________\n';
+  receipt += `Total Amount:${' '.repeat(20)}₦${data.grandTotal.toFixed(2)}\n`;
+  receipt += '__________________________________________\n';
+
+  // Payment method
+  receipt += `Payment Method: ${data.paymentMethod.charAt(0).toUpperCase() + data.paymentMethod.slice(1)}\n\n`;
+
+  // Notes
+  if (data.notes.trim()) {
+    receipt += `Notes: ${data.notes}\n\n`;
+  }
+
+  // Footer
+  receipt += 'Thank you for dining with us!\n';
+  receipt += 'Please visit again.\n';
+
+  return receipt;
+}
+
+// Show preview
+function showPreview() {
+  const receiptText = generateReceiptText();
+  document.getElementById('previewText').textContent = receiptText;
+  document.getElementById('receiptPreview').style.display = 'block';
+  document.querySelector('.receipt-creator').style.display = 'none';
+}
+
+// Hide preview
+function hidePreview() {
+  document.getElementById('receiptPreview').style.display = 'none';
+  document.querySelector('.receipt-creator').style.display = 'block';
+}
+
+// STORE TICKETS
+let tickets = [];
+const modal = document.getElementById("ticketModal");
+const openBtn = document.getElementById("openTicketModal");
+const closeBtn = modal.querySelector(".modal-close-btn");
+const printBtn = document.getElementById("printTicket");
+const saveBtn = document.getElementById("saveTicket");
+
+// Modal animations
+openBtn.onclick = () => {
+  modal.style.display = "flex";
+  setTimeout(() => {
+    modal.classList.add("active");
+    initReceiptCreator();
+  }, 10);
+};
+
+closeBtn.onclick = () => {
+  modal.classList.remove("active");
+  setTimeout(() => modal.style.display = "none", 300);
+  hidePreview();
+};
+
+modal.querySelector(".modal-backdrop").onclick = () => {
+  closeBtn.click();
+};
+
+// Print functionality
+printBtn.onclick = () => {
+  const receiptContent = generateReceiptText();
+  const printWindow = window.open('', '', 'height=600,width=800');
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Print Receipt</title>
+      <style>
+        body {
+          font-family: 'Courier New', monospace;
+          font-size: 12px;
+          margin: 20px;
+          line-height: 1.4;
+        }
+        pre {
+          white-space: pre-wrap;
+          word-wrap: break-word;
+        }
+      </style>
+    </head>
+    <body>
+      <pre>${receiptContent}</pre>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+};
+
+// Save functionality
+saveBtn.onclick = () => {
+  const receiptContent = generateReceiptText();
+
+  if (!receiptContent.trim()) {
+    alert("Please fill in the receipt details before saving.");
+    return;
+  }
+
+  // Add loading state
+  saveBtn.innerHTML = '<svg class="animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"/></svg> Saving...';
+  saveBtn.disabled = true;
+
+  // Send to backend to save to database
+  fetch("/api/receipts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: receiptContent })
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert("Receipt saved successfully!");
+    closeBtn.click();
+  })
+  .catch(err => {
+    console.error("Error saving receipt:", err);
+    alert("Failed to save receipt.");
+  })
+  .finally(() => {
+    saveBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Save';
+    saveBtn.disabled = false;
+  });
+};
+// Quick AI feedback handlers
+document.addEventListener('click', function(e){
+    if(e.target && (e.target.id === 'feedbackThumbsUp' || e.target.id === 'feedbackThumbsDown')){
+        const isUp = e.target.id === 'feedbackThumbsUp';
+        const payload = {
+            conversation_id: null,
+            message_id: null,
+            user_id: null,
+            rating: isUp ? 5 : 1,
+            feedback_text: isUp ? 'thumbs_up' : 'thumbs_down',
+            correction: null
+        };
+        fetch('/api/ai-feedback', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) })
+        .then(r=>r.json()).then(j=>{
+            const msg = j && j.success ? 'Feedback recorded' : 'Feedback failed';
+            alert(msg);
+        }).catch(err=>{ console.error('feedback error', err); alert('Feedback failed'); });
+    }
+});
+</script>
+<script>
+const scrollBtn = document.getElementById("scroll-down-btn");
+const chatBox = document.getElementById("chat-messages");
+scrollBtn.onclick = () => {
+    chatBox.scrollTop = chatBox.scrollHeight;
+};
+</script>
+<script>
+// Highlight the active sidebar link
+const sidebarLinks = document.querySelectorAll('.sidebar .menu a');
+const currentPath = window.location.pathname;
+sidebarLinks.forEach(link => {
+    // Remove any existing active class
+    link.classList.remove('active');
+    // Compare href with current path
+    if (link.getAttribute('href') === currentPath.split("/").pop() || 
+        (link.getAttribute('href') === "#" && currentPath.endsWith("dashboard.html"))) {
+        link.classList.add('active');
+    }
+});
+</script>
+<script>
+// LOAD ESCALATED FROM STORAGE
+let escalatedChats = JSON.parse(localStorage.getItem("escalatedChats")) || [];
+let resolvedChats = JSON.parse(localStorage.getItem("resolvedChats")) || [];
+// ESCALATE FUNCTION
+function escalateChat() {
+    if (!currentConversation) {
+        alert("Open a chat first!");
+        return;
+    }
+    const chatName = document.getElementById("chatName").textContent;
+    const escalation = {
+        id: currentConversation,
+        name: chatName,
+        time: new Date().toLocaleString()
+    };
+    // prevent duplicates
+    const exists = escalatedChats.find(c => c.id === currentConversation);
+    if (!exists) {
+        escalatedChats.push(escalation);
+    }
+    // SAVE TO LOCAL STORAGE
+    localStorage.setItem("escalatedChats", JSON.stringify(escalatedChats));
+    // SHOW BADGE
+    document.getElementById("escalatedBadge").style.display = "inline-block";
+    alert("Chat escalated!");
+}
+// ATTACH EVENT TO ALL ESCALATE BUTTONS
+document.querySelectorAll(".escalate-btn").forEach(btn => {
+    btn.onclick = escalateChat;
+});
+// SHOW BADGE IF ALREADY ESCALATED
+function checkEscalationStatus(convoId) {
+    const found = escalatedChats.find(c => c.id == convoId);
+    const badge = document.getElementById("escalatedBadge");
+    if (found) {
+        badge.style.display = "inline-block";
+    } else {
+        badge.style.display = "none";
+    }
+}
+// MODIFY YOUR loadMessages FUNCTION
+window.addEventListener('load', function() {
+    if (typeof loadMessages === 'function') {
+        const originalLoadMessages = loadMessages;
+        loadMessages = async function(convoId, phone) {
+            await originalLoadMessages(convoId, phone);
+            const chatNameEl = document.getElementById("chatName");
+            if (chatNameEl && typeof phone !== 'undefined') {
+                chatNameEl.textContent = phone;
+            }
+            if (typeof checkEscalationStatus === 'function') {
+                checkEscalationStatus(convoId);
+            }
+        };
+    }
+});
+// FILTER: SHOW ESCALATED CHATS
+// Filter behavior is handled by public/js/inbox.js
+// RENDER ESCALATED CHATS
+function renderEscalatedChats() {
+    const list = document.querySelector(".conversation-list");
+    list.innerHTML = "";
+    if (escalatedChats.length === 0) {
+        // Show message when no escalated chats
+        const emptyDiv = document.createElement("div");
+        emptyDiv.classList.add("no-chats-message");
+        emptyDiv.textContent = "No escalated chats.";
+        emptyDiv.style.textAlign = "center";
+        emptyDiv.style.color = "#888";
+        emptyDiv.style.padding = "20px";
+        emptyDiv.style.fontStyle = "italic";
+        list.appendChild(emptyDiv);
+        return;
+    }
+    escalatedChats.forEach(chat => {
+        const div = document.createElement("div");
+        div.classList.add("conversation");
+        div.style.position = "relative"; // needed for positioning the button
+        div.innerHTML = `
+            <div class="name">${chat.name}</div>
+            <div class="preview">Escalated</div>
+            <div class="meta">⏱ ${chat.time}</div>
+            <!-- Unescalate button -->
+            <button class="unescalate-btn" title="Unescalate">×</button>
+        `;
+        // Unescalate button action
+        div.querySelector(".unescalate-btn").onclick = (e) => {
+    e.stopPropagation(); // prevent opening chat
+    if (confirm(`Unescalate chat with ${chat.name}?`)) {
+        // Remove from escalatedChats
+        escalatedChats = escalatedChats.filter(c => c.id !== chat.id);
+        localStorage.setItem("escalatedChats", JSON.stringify(escalatedChats));
+        // Add to resolvedChats with timestamp
+        const resolved = {
+            id: chat.id,
+            name: chat.name,
+            time: new Date().toLocaleString()
+        };
+        resolvedChats.push(resolved);
+        localStorage.setItem("resolvedChats", JSON.stringify(resolvedChats));
+        // Re-render list
+        renderEscalatedChats();
+        // Hide badge if currently open
+        if (currentConversation === chat.id) {
+            document.getElementById("escalatedBadge").style.display = "none";
+        }
+    }
+};
+        div.onclick = () => loadMessages(chat.id, chat.name);
+        list.appendChild(div);
+    });
+}
+function renderResolvedChats() {
+    const list = document.querySelector(".conversation-list");
+    list.innerHTML = "";
+    resolvedChats.forEach(chat => {
+        const div = document.createElement("div");
+        div.classList.add("conversation");
+        div.innerHTML = `
+            <div class="name">${chat.name}</div>
+            <div class="preview">Resolved</div>
+            <div class="meta">✅ ${chat.time}</div>
+        `;
+        // Clicking opens chat normally
+        div.onclick = () => loadMessages(chat.id, chat.name);
+        list.appendChild(div);
+    });
+}
+function renderNoReceipts() {
+    const list = document.querySelector(".conversation-list");
+    list.innerHTML = "";
+    const emptyDiv = document.createElement("div");
+    emptyDiv.classList.add("no-chats-message");
+    emptyDiv.textContent = "No saved receipts.";
+    emptyDiv.style.textAlign = "center";
+    emptyDiv.style.color = "#888";
+    emptyDiv.style.padding = "20px";
+    emptyDiv.style.fontStyle = "italic";
+    list.appendChild(emptyDiv);
+}
+</script>
+<script>
+// Escalate button logic
+async function escalateCurrentChat() {
+    const chatName = document.getElementById('chatName')?.textContent.trim() || 'Customer';
+    let conversationId = null;
+    const activeConv = document.querySelector('.conversation-list .conversation.active');
+    if (activeConv && activeConv.dataset && activeConv.dataset.id) {
+        conversationId = activeConv.dataset.id;
+    } else if (window.currentConversationId) {
+        conversationId = window.currentConversationId;
+    } else if (typeof currentConversation !== 'undefined') {
+        conversationId = currentConversation;
+    }
+    if (!conversationId) {
+        alert('No conversation selected. Open a chat first to escalate.');
+        return;
+    }
+    try {
+        const response = await fetch('/api/escalate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ conversation_id: conversationId, name: chatName })
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert('Chat escalated successfully!');
+            const badge = document.getElementById('escalatedBadge');
+            if (badge) badge.style.display = 'inline';
+        } else {
+            alert(data.message || 'Already escalated or error occurred.');
+        }
+    } catch (error) {
+        console.error('Escalation error:', error);
+        alert('Failed to escalate chat. Please try again.');
+    }
+}
+// Attach to all escalate buttons
+const escalateBtns = document.querySelectorAll('.escalate-btn');
+escalateBtns.forEach(btn => {
+    btn.onclick = escalateCurrentChat;
+});
+// Also attach to the quick action escalate button
+const quickEscalateBtn = document.querySelector('.actions .escalate-btn');
+if (quickEscalateBtn) quickEscalateBtn.onclick = escalateCurrentChat;
+</script>
+<div id="contextMenu" style="
+    position:absolute;
+    background:white;
+    border:1px solid #ddd;
+    padding:10px;
+    display:none;
+    z-index:1000;
+    border-radius:6px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+">
+    <div id="dismissOption" style="cursor:pointer; color:red;">
+        Dismiss
+    </div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://localhost:3000/socket.io/socket.io.js"></script>
+<script src="./js/inbox.js"></script>
+<script src="./js/app.js"></script>
+<script src="./js/sidebar.js" defer></script>
+<script>
+// Listen for theme changes (e.g., after settings change)
+window.addEventListener('storage', function(e) {
+    if (e.key === 'theme') {
+        if (e.newValue === 'Dark') {
+            document.body.classList.add('dark-theme');
+        } else {
+            document.body.classList.remove('dark-theme');
+        }
+    }
+});
+// Also check on page focus (in case theme was changed in another tab)
+window.addEventListener('focus', function() {
+    const theme = localStorage.getItem('theme') || 'Light';
+    if (theme === 'Dark') {
+        document.body.classList.add('dark-theme');
+    } else {
+        document.body.classList.remove('dark-theme');
+    }
+});
+</script> 
+</body>
+</html>
+

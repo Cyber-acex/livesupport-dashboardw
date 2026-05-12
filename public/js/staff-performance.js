@@ -1,12 +1,21 @@
+document.getElementById('refreshBtn').addEventListener('click', loadAndRender);
+document.getElementById('timeRange').addEventListener('change', loadAndRender);
+
+// initial
 // staff-performance.js
 // Requires Chart.js (included via CDN in the HTML)
 
 let avgResponseChart = null;
 let activityChart = null;
+let currentData = [];
+let filteredData = [];
+const pageSize = 6;
+let currentPage = 1;
 
 async function fetchMetrics() {
     try {
-        const res = await fetch('/api/staff-metrics');
+        const days = document.getElementById('timeRange') ? document.getElementById('timeRange').value : '7';
+        const res = await fetch('/api/staff-metrics?days=' + encodeURIComponent(days));
         if (!res.ok) throw new Error('Network error');
         return await res.json();
     } catch (err) {
@@ -34,9 +43,11 @@ function renderSummary(data) {
     const avgSatisfaction = (data.reduce((a,b)=>a+b.satisfaction,0)/data.length).toFixed(2);
 
     summary.innerHTML = `
-        <p><strong>Average response time:</strong> ${formatSeconds(avgResp)}</p>
-        <p><strong>Total messages handled:</strong> ${totalHandled}</p>
-        <p><strong>Average satisfaction:</strong> ${avgSatisfaction} / 5</p>
+        <div class="kpi">
+            <div class="kpi-item"><h4>Avg response</h4><p>${formatSeconds(avgResp)}</p></div>
+            <div class="kpi-item"><h4>Total handled</h4><p>${totalHandled}</p></div>
+            <div class="kpi-item"><h4>Avg satisfaction</h4><p>${avgSatisfaction} / 5</p></div>
+        </div>
     `;
 }
 
@@ -59,7 +70,7 @@ function createOrUpdateAvgChart(data) {
             datasets: [{
                 label: 'Avg response (s)',
                 data: values,
-                backgroundColor: 'rgba(16,185,129,0.7)'
+                backgroundColor: labels.map((_,i)=>`rgba(${30+i*10%200},${120+i*20%200},${150+i*15%200},0.8)`)
             }]
         },
         options: {
@@ -106,10 +117,11 @@ function createOrUpdateActivityChart(staff) {
     });
 }
 
-function renderStaffList(data) {
+function renderStaffTable(pageData) {
     const container = document.getElementById('staffList');
-    if (!data) return container.innerHTML = '<em>Failed to load</em>';
-    if (data.length === 0) return container.innerHTML = '<em>No staff data</em>';
+    if (!container) return;
+    if (!pageData) return container.innerHTML = '<em>Failed to load</em>';
+    if (pageData.length === 0) return container.innerHTML = '<em>No staff data</em>';
 
     const table = document.createElement('table');
     table.className = 'metrics-table';
@@ -118,40 +130,135 @@ function renderStaffList(data) {
         <tbody></tbody>
     `;
     const tbody = table.querySelector('tbody');
-    data.forEach((s, idx) => {
+    pageData.forEach((s, idx) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${s.name}</td>
+            <td><strong>${s.name}</strong><div style="font-size:12px;color:var(--muted)">${s.role||''}</div></td>
             <td>${formatSeconds(s.avg_response_time)}</td>
             <td>${formatSeconds(s.avg_resolution_time)}</td>
             <td>${s.messages_handled}</td>
             <td>${s.satisfaction} / 5</td>
         `;
         tr.addEventListener('click', () => {
-            // set active style
-            table.querySelectorAll('tr').forEach(r => r.classList.remove('active')); 
+            table.querySelectorAll('tr').forEach(r => r.classList.remove('active'));
             tr.classList.add('active');
             createOrUpdateActivityChart(s);
         });
-        if (idx === 0) tr.classList.add('active');
+        tr.addEventListener('dblclick', () => showStaffModal(s));
         tbody.appendChild(tr);
     });
     container.innerHTML = '';
     container.appendChild(table);
+}
 
-    // initialize activity chart with first staff
-    createOrUpdateActivityChart(data[0]);
+function applyFiltersAndRender() {
+    const search = document.getElementById('searchInput') ? document.getElementById('searchInput').value.trim().toLowerCase() : '';
+    const sortVal = document.getElementById('sortBy') ? document.getElementById('sortBy').value : 'name';
+
+    filteredData = currentData.filter(s => !search || s.name.toLowerCase().includes(search));
+
+    const desc = sortVal.startsWith('-');
+    const key = desc ? sortVal.slice(1) : sortVal;
+    filteredData.sort((a,b)=>{
+        if (key === 'name') return a.name.localeCompare(b.name);
+        const av = a[key] || 0; const bv = b[key] || 0; return desc ? bv-av : av-bv;
+    });
+
+    // pagination
+    const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
+    if (currentPage > totalPages) currentPage = totalPages;
+    const start = (currentPage-1)*pageSize;
+    const pageData = filteredData.slice(start, start+pageSize);
+
+    renderStaffTable(pageData);
+    renderPagination(totalPages);
+    if (filteredData.length) createOrUpdateAvgChart(filteredData);
+    if (pageData[0]) createOrUpdateActivityChart(pageData[0]);
+}
+
+function renderPagination(totalPages) {
+    const el = document.getElementById('pagination');
+    if (!el) return;
+    el.innerHTML = '';
+    const prev = document.createElement('button'); prev.textContent = '<'; prev.disabled = currentPage<=1;
+    prev.addEventListener('click', ()=>{ if (currentPage>1) { currentPage--; applyFiltersAndRender(); } });
+    el.appendChild(prev);
+    for (let i=1;i<=totalPages;i++){
+        const btn = document.createElement('button'); btn.textContent = i; if (i===currentPage) btn.classList.add('active');
+        btn.addEventListener('click', ()=>{ currentPage=i; applyFiltersAndRender(); });
+        el.appendChild(btn);
+    }
+    const next = document.createElement('button'); next.textContent = '>'; next.disabled = currentPage>=totalPages;
+    next.addEventListener('click', ()=>{ if (currentPage<totalPages) { currentPage++; applyFiltersAndRender(); } });
+    el.appendChild(next);
+}
+
+function exportCsv() {
+    const rows = [ ['Name','AvgResponse(s)','AvgResolution(s)','Handled','Satisfaction'] ];
+    currentData.forEach(s=> rows.push([s.name,s.avg_response_time,s.avg_resolution_time,s.messages_handled,s.satisfaction]));
+    const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'staff-performance.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+function showStaffModal(s) {
+    const modal = document.getElementById('staffModal');
+    if (!modal) return;
+    document.getElementById('modalName').textContent = s.name;
+    const body = document.getElementById('modalBody');
+    body.innerHTML = `
+        <p><strong>Role:</strong> ${s.role||'—'}</p>
+        <p><strong>Avg response:</strong> ${formatSeconds(s.avg_response_time)}</p>
+        <p><strong>Avg resolution:</strong> ${formatSeconds(s.avg_resolution_time)}</p>
+        <p><strong>Handled:</strong> ${s.messages_handled}</p>
+        <p><strong>Satisfaction:</strong> ${s.satisfaction} / 5</p>
+        <h4>Improvement suggestions</h4>
+        <ul>
+            ${generateSuggestions(s).map(t=>`<li>${t}</li>`).join('')}
+        </ul>
+    `;
+    modal.setAttribute('aria-hidden','false');
+}
+
+function hideStaffModal() {
+    const modal = document.getElementById('staffModal'); if (!modal) return; modal.setAttribute('aria-hidden','true');
+}
+
+function generateSuggestions(s) {
+    const list = [];
+    if (s.avg_response_time > 300) list.push('Consider improving first response time (aim < 2m).');
+    if (s.avg_resolution_time > 1800) list.push('Investigate long resolution cases and share best practices.');
+    if (s.satisfaction < 4) list.push('Provide coaching on customer empathy and follow-ups.');
+    if (s.messages_handled < 20) list.push('Encourage more proactive engagement during shifts.');
+    if (list.length===0) list.push('Performance looks good — keep it up!');
+    return list;
 }
 
 async function loadAndRender() {
     const data = await fetchMetrics();
-    renderSummary(data);
-    renderStaffList(data);
-    if (data) createOrUpdateAvgChart(data);
+    if (!data) return;
+    // remove entries with role 'viewer' or 'staff' (case-insensitive)
+    currentData = data.filter(s=>{
+        const r = (s.role||'').toString().toLowerCase();
+        return r !== 'viewer' && r !== 'staff';
+    });
+    renderSummary(currentData);
+    currentPage = 1;
+    applyFiltersAndRender();
 }
 
+// event wiring
 document.getElementById('refreshBtn').addEventListener('click', loadAndRender);
 document.getElementById('timeRange').addEventListener('change', loadAndRender);
+document.getElementById('exportCsv').addEventListener('click', exportCsv);
+document.getElementById('sortBy').addEventListener('change', ()=>{ currentPage=1; applyFiltersAndRender(); });
+
+let searchTimer = null;
+document.getElementById('searchInput').addEventListener('input', ()=>{ clearTimeout(searchTimer); searchTimer = setTimeout(()=>{ currentPage=1; applyFiltersAndRender(); }, 250); });
+
+document.getElementById('modalClose').addEventListener('click', hideStaffModal);
+document.getElementById('staffModal').addEventListener('click', (e)=>{ if (e.target.id === 'staffModal') hideStaffModal(); });
 
 // initial
 fetch('/api/user').then(r=>r.json()).then(u=>{document.getElementById('staffName').textContent = u.name || u.role || 'Me';}).catch(()=>{});

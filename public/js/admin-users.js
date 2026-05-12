@@ -29,7 +29,7 @@ function renderUsers(users) {
   table.innerHTML = '<tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Active</th><th>Disabled</th><th>Actions</th></tr>';
   users.forEach(u => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${u.id}</td><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td><select data-id="${u.id}" class="roleSel"><option value="agent">agent</option><option value="admin">admin</option></select></td><td>${u.active ? '<span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;background:#10b981;border-radius:50%;display:inline-block;"></span><small style="color:#065f46">Active</small></span>' : '<small style="color:#6b7280">Offline</small>'}</td><td><input type="checkbox" data-id="${u.id}" class="disabledChk" ${u.disabled ? 'checked' : ''} /></td><td></td>`;
+    tr.innerHTML = `<td>${u.id}</td><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td><select data-id="${u.id}" class="roleSel"><option value="admin">Admin</option><option value="agent">Agent</option><option value="viewer">Viewer</option><option value="Delivery Support">Delivery Support</option><option value="Manager">Manager</option><option value="Refund Manager">Refund Manager</option><option value="Kitchen Supervisor">Kitchen Supervisor</option><option value="Customer Support">Customer Support</option></select></td><td>${u.active ? '<span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;background:#10b981;border-radius:50%;display:inline-block;"></span><small style="color:#065f46">Active</small></span>' : '<small style="color:#6b7280">Offline</small>'}</td><td><input type="checkbox" data-id="${u.id}" class="disabledChk" ${u.disabled ? 'checked' : ''} /></td><td></td>`;
     const actionsTd = tr.querySelector('td:last-child');
 
     const saveBtn = document.createElement('button'); saveBtn.textContent = 'Save';
@@ -80,8 +80,10 @@ function renderUsers(users) {
 function escapeHtml(s){ if(!s) return ''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // Attach handlers after DOM is ready to ensure elements exist
+// Attach handlers after DOM is ready, but DO NOT auto-fetch users.
+// The settings page will call `fetchUsers()` when the admin UI is shown.
 window.addEventListener('DOMContentLoaded', () => {
-  // Create button
+  // Create button wiring
   const _createBtn = document.getElementById('createBtn');
   if (_createBtn) {
     _createBtn.addEventListener('click', async () => {
@@ -108,7 +110,8 @@ window.addEventListener('DOMContentLoaded', () => {
         if (nameEl) nameEl.value = '';
         if (emailEl) emailEl.value = '';
         if (passEl) passEl.value = '';
-        fetchUsers();
+        // refresh when admin UI is active
+        try { if (document.getElementById('adminUsers') && document.getElementById('adminUsers').classList.contains('active')) fetchUsers(); } catch(e){}
         const msgEl = document.getElementById('createMsg');
         if (msgEl) {
           msgEl.style.display = 'block';
@@ -124,21 +127,23 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // initial load
-  try { fetchUsers(); } catch (e) { console.warn('fetchUsers failed at DOMContentLoaded', e); }
+  // Do not auto-run fetchUsers here; the host page will call it when admin UI is displayed.
 
-  // Setup Socket.IO to refresh list when users change or presence updates
+  // Setup Socket.IO to refresh list when users change or presence updates, but only trigger
+  // an actual fetch when the admin panel is active to avoid triggering access checks for non-admins.
   try {
     if (typeof io !== 'undefined') {
       const _base = (typeof window !== 'undefined' && window.BACKEND_URL) ? String(window.BACKEND_URL).replace(/\/$/, '') : '';
       const socket = _base ? io(_base) : io();
       socket.on('admin:users:changed', (info) => {
-        console.log('admin:users:changed', info || '');
-        try { fetchUsers(); } catch (e) {}
+        try {
+          if (document.getElementById('adminUsers') && document.getElementById('adminUsers').classList.contains('active')) fetchUsers();
+        } catch (e) {}
       });
       socket.on('presenceUpdate', (list) => {
-        // presence changed — refresh so active flags update
-        try { fetchUsers(); } catch (e) {}
+        try {
+          if (document.getElementById('adminUsers') && document.getElementById('adminUsers').classList.contains('active')) fetchUsers();
+        } catch (e) {}
       });
     }
   } catch (e) { console.warn('Socket.IO not available for admin users:', e); }
